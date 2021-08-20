@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::fmt;
-use std::num::ParseIntError;
+use std::num::{ParseIntError, ParseFloatError};
 use std::str::ParseBoolError;
 
 
@@ -21,8 +21,14 @@ impl fmt::Display for MixError {
     }
 }
 
+/// Converting ParseErrors to MixError
 impl From<ParseIntError> for MixError {
     fn from(err: ParseIntError) -> Self {
+        MixError::new(&err.to_string())
+    }
+}
+impl From<ParseFloatError> for MixError {
+    fn from(err: ParseFloatError) -> Self {
         MixError::new(&err.to_string())
     }
 }
