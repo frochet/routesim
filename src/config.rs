@@ -8,7 +8,8 @@ use std::vec::IntoIter;
 use rand::prelude::*;
 use rand::distributions::WeightedIndex;
 
-/// A config is a set of hashmaps containing mixes
+/// A config is a set of mixes for each layer
+/// and a hashmap for unselected mixes.
 #[derive(Default)]
 pub struct Config {
     layers: [Vec<Mixnode>; 3],
@@ -35,6 +36,7 @@ impl Config {
     pub fn unselected(&self) -> &HashMap<u32, Mixnode> {
         &self.unselected
     }
+    /// Sample a route from the network layer configation
     pub fn sample_path(&self, rng: &mut ThreadRng) -> IntoIter<&Mixnode> {
         let mut path = vec![];
         // returns an owned iterator
@@ -45,6 +47,8 @@ impl Config {
         }
         path.into_iter()
     }
+    /// Check whether the three mixnode in path are compromised.
+    /// return true if they are, false otherwise.
     pub fn is_path_malicious(&self, path: &mut IntoIter<&Mixnode>) -> bool{
         let mut mal_mix = 0;
         for hop in path {
@@ -56,6 +60,11 @@ impl Config {
     }
 }
 
+
+/// Load the network configuration from filename.
+///
+/// Each line must be
+/// mixid [integer], weight [float], is_malicious [bool], layer [-1..2]
 pub fn load<P>(filename: P) -> Config
 where
     P: AsRef<Path>,
