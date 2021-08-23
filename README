@@ -13,8 +13,8 @@ containing the date, the user id, the path (mix ids) and whether the route is
 fully compromised or not (i.e., whether the user selected 3 malicious mixes).
 
 The timings and number of path sampled depends on the user model selected. E.g.,
-for the "simple" user model, one path to send one message is used every 10
-minutes.
+for the "simple" user model, one path is sampled every 10 minutes on average
+(uniformly random in 5, 15 minutes).
 
 More complex user models and logging mechanisms could be implemented.
 

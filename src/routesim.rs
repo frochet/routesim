@@ -43,8 +43,7 @@ impl Runable {
     pub fn run<T>(&self)
     where
         T: UserModel +
-           Iterator<Item = u64> +
-           Default,
+           Iterator<Item = u64>,
     {
         (0..self.users).into_par_iter().for_each(|user| {
             let mut usermodel = T::new();
