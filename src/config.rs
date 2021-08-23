@@ -27,23 +27,32 @@ impl Config {
     #[allow(dead_code)]
     pub fn update(&self) {
     }
-
+    #[allow(dead_code)]
     pub fn layers(&self) -> &[Vec<Mixnode>] {
         &self.layers
     }
+    #[allow(dead_code)]
     pub fn unselected(&self) -> &HashMap<u32, Mixnode> {
         &self.unselected
     }
-    pub fn sample_path(&self, rng: &mut ThreadRng) -> IntoIter<u32> {
-        let mut path = vec![0 as u32; 3];
-        // TODO sample the path
-        // and returns an owned iterator
+    pub fn sample_path(&self, rng: &mut ThreadRng) -> IntoIter<&Mixnode> {
+        let mut path = vec![];
+        // returns an owned iterator
         for i in 0..3 {
             if let Some(wc) = &*self.wc_layers[i] {
-                path[i] = self.layers[i][wc.sample(rng)].mixid;
+                path.push(&self.layers[i][wc.sample(rng)]);
             }
         }
         path.into_iter()
+    }
+    pub fn is_path_malicious(&self, path: &mut IntoIter<&Mixnode>) -> bool{
+        let mut mal_mix = 0;
+        for hop in path {
+            if hop.is_malicious {
+                mal_mix += 1;
+            }
+        }
+        mal_mix == 3
     }
 }
 
