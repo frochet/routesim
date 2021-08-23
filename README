@@ -34,5 +34,11 @@ More complex user models and logging mechanisms could be implemented.
   protocol are deanonymized? (i.e., a query can be of size N, a response of size
   M, with usually N << M). The query and the response are decomposed in many
   messages sent within many routes. What is the probability that at least one of
-  those messages is compromised?
+  those messages is compromised? How long does it take for everyone to get
+  screwed?
+
+
+
+# TODO implementing a guard mechanism and the ability to update the network
+  configure through the simulation
 
