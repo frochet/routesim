@@ -1,0 +1,38 @@
+
+This is a simplistic User simulator for path generation in a Mixnet.
+
+This program reads a mixnet configuration from a file and applies a user model to
+generate routes through time for a given number of users. It outputs to stdout
+the following kind of line:  
+  
+...  
+day 0, 21:20:0, 0, 230,668,96,false  
+...  
+
+containing the date, the user id, the path (mix ids) and whether the route is
+fully compromised or not (i.e., whether the user selected 3 malicious mixes).
+
+The timings and number of path sampled depends on the user model selected. E.g.,
+for the "simple" user model, one path to send one message is used every 10
+minutes.
+
+More complex user models and logging mechanisms could be implemented.
+
+### User models
+
+- a Signal-type of user model, in which we sample routes according to some
+  distribution representing habits in exchanging messages on Signal
+- Email
+
+### Logging mechanisms:
+
+- Social graph logging. E.g., assuming graphs of users, how long would it take
+  for the adversary with some compromised nodes to deanonymize the social graph?
+  (i.e., for each user, observing all outgoing edges).  
+
+- Query/Response => What fraction of Query/responses for any type of modelised
+  protocol are deanonymized? (i.e., a query can be of size N, a response of size
+  M, with usually N << M). The query and the response are decomposed in many
+  messages sent within many routes. What is the probability that at least one of
+  those messages is compromised?
+
