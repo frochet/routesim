@@ -49,7 +49,7 @@ impl Runable {
             let mut usermodel = T::new();
             let mut rng = thread_rng();
             usermodel.set_limit(self.days_to_timestamp());
-            while let Some(message_timing) = usermodel.next() {
+            for message_timing in usermodel {
                 let path = self.config.sample_path(&mut rng);
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing

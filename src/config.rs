@@ -74,7 +74,7 @@ where
     //skip header
     for line_r in BufReader::new(file).lines().skip(1) {
         if let Ok(line) = line_r {
-            let mix: Mixnode = line.parse().expect(&format!("Unable to parse into a Mixnode -- Is
+            let mix: Mixnode = line.parse().unwrap_or_else(|_| panic!("Unable to parse into a Mixnode -- Is
                                                             your data correct? {}", line));
             match mix.layer {
                 0 | 1 | 2 => config.layers[mix.layer as usize].push(mix),
