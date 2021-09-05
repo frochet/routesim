@@ -16,9 +16,9 @@ pub struct Runable {
 impl Runable {
     pub fn new(users: u32, config: Config, days: u32) -> Self {
         Runable {
-            config: config,
-            users: users,
-            days: days,
+            config,
+            users,
+            days,
         }
     }
 
