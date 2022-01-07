@@ -44,7 +44,7 @@ fn test_correct_arguments() {
 }
 #[test]
 fn test_without_space() {
-    let mix: Mixnode = "0,7.222983840621532,False,-1".parse().unwrap();
+    let mut mix: Mixnode = "0,7.222983840621532,False,-1".parse().unwrap();
     assert_eq!(mix.layer, -1);
     assert_eq!(mix.weight, 7.222983840621532);
     assert_eq!(mix.mixid, 0);
