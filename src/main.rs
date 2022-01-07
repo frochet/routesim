@@ -2,9 +2,11 @@ mod config;
 mod mixnodes;
 mod routesim;
 mod usermodel;
+mod simplemodel;
+
 use clap::{AppSettings, Clap};
 use routesim::Runable;
-use usermodel::*;
+use simplemodel::*;
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
