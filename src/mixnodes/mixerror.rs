@@ -1,23 +1,24 @@
 use std::error::Error;
 use std::fmt;
-use std::num::{ParseIntError, ParseFloatError};
+use std::num::{ParseFloatError, ParseIntError};
 use std::str::ParseBoolError;
-
 
 #[derive(Debug)]
 pub struct MixError {
-    details: String
+    details: String,
 }
 
 impl MixError {
     pub fn new(msg: &str) -> MixError {
-        MixError { details: msg.to_string()}
+        MixError {
+            details: msg.to_string(),
+        }
     }
 }
 
 impl fmt::Display for MixError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,"{}",self.details)
+        write!(f, "{}", self.details)
     }
 }
 
@@ -43,6 +44,3 @@ impl Error for MixError {
         &self.details
     }
 }
-
-
-

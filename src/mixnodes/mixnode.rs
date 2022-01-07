@@ -13,24 +13,34 @@ pub struct Mixnode {
 impl FromStr for Mixnode {
     type Err = Box<dyn error::Error>;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.split(',').map(|each| each.trim().to_lowercase()).collect::<Vec<_>>() {
+        match s
+            .split(',')
+            .map(|each| each.trim().to_lowercase())
+            .collect::<Vec<_>>()
+        {
             vec if vec.len() < 4 => Err(Box::new(MixError::new("Missing arguments"))),
             vec if vec.len() >= 4 => {
                 let mixid_p = vec[0].parse::<u32>()?;
                 let bw_p = vec[1].parse::<f64>()?;
                 let is_malicious_p = vec[2].parse::<bool>()?;
                 let layer_p = vec[3].parse::<i8>()?;
-                Ok(Mixnode{layer:layer_p, weight: bw_p, mixid: mixid_p, is_malicious:
-                    is_malicious_p})
-            },
-            _ => Err(Box::new(MixError::new("The line information are unexpected. It should be: mixid,
-                                   weight, is_malicious, layer")))
+                Ok(Mixnode {
+                    layer: layer_p,
+                    weight: bw_p,
+                    mixid: mixid_p,
+                    is_malicious: is_malicious_p,
+                })
+            }
+            _ => Err(Box::new(MixError::new(
+                "The line information are unexpected. It should be: mixid,
+                                   weight, is_malicious, layer",
+            ))),
         }
     }
 }
 
 #[test]
-#[should_panic(expected="Missing arguments")]
+#[should_panic(expected = "Missing arguments")]
 fn test_missing_arguments() {
     let _mix: Mixnode = "10,1".parse().unwrap();
 }

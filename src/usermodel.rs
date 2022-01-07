@@ -19,14 +19,13 @@ pub struct SimpleModel {
     die: Uniform<u64>,
 }
 
-
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
 impl UserModel for SimpleModel {
     fn new() -> Self {
         SimpleModel {
-            rng:  rand::thread_rng(),
-            die:  Uniform::from(300..900),
+            rng: rand::thread_rng(),
+            die: Uniform::from(300..900),
             current_time: 0,
             limit: 0,
         }
