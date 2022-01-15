@@ -29,6 +29,9 @@ struct Opts {
     usermod: String,
     #[clap(long, default_value = "5000", about = "Number of users to simulate")]
     users: u32,
+
+    #[clap(long, default_value = "86400", about = "Validity period for a given topologies")]
+    epoch: u32,
 }
 
 fn main() {
@@ -36,7 +39,12 @@ fn main() {
 
     let netconf = config::load(opts.filename);
 
-    let runner = Runable::new(opts.users, netconf, opts.days);
+    let mut topologies = vec![];
+    topologies.push(netconf);
+
+    let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch);
+    runner.with_guards();
+
     match &opts.usermod[..] {
         "simple" => runner.run::<SimpleModel>(),
         _ => println!("We don't have that usermodel"),

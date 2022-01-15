@@ -6,27 +6,42 @@
  */
 
 use crate::usermodel::UserModel;
+use crate::mixnodes::mixnode::Mixnode;
+use crate::config::{PATH_LENGTH, PAYLOAD_SIZE, GUARDS_LAYER, GUARDS_SAMPLE_SIZE};
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
+use crate::config::TopologyConfig;
 
-pub struct SimpleModel {
+const INTERVAL_MAX: u64 = 900;
+
+const INTERVAL_MIN: u64 = 300;
+
+pub struct SimpleModel<'a> {
     /// timestamp of current time, starting at 0.
     current_time: u64,
     /// the max value of a timing message
     limit: u64,
     rng: ThreadRng,
     die: Uniform<u64>,
+    // Mixnet topology -- should contain all topologies studied in our time period
+    topos: &'a[TopologyConfig],
 }
+
 
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
-impl UserModel for SimpleModel {
-    fn new() -> Self {
+impl<'a> UserModel<'a> for SimpleModel<'a> {
+
+    fn new(topos: &'a[TopologyConfig]) -> Self {
+        // initialize the client with guards
+
+        let mut rng =  rand::thread_rng();
         SimpleModel {
-            rng: rand::thread_rng(),
-            die: Uniform::from(300..900),
+            rng,
+            die: Uniform::from(INTERVAL_MIN..INTERVAL_MAX),
             current_time: 0,
             limit: 0,
+            topos,
         }
     }
     /// We simply increase the current time with the sampled value
@@ -40,14 +55,19 @@ impl UserModel for SimpleModel {
     fn set_limit(&mut self, limit: u64) {
         self.limit = limit;
     }
+
+    /// Update any client information (e.g., guards), relative to the current timing
+    fn update(&mut self) {
+    }
 }
 
-/// TODO XXX implement this as a macro
-impl Iterator for SimpleModel {
+impl Iterator for SimpleModel<'_> {
     // "%days, %hh,%mm,%ss
     type Item = u64;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // update user information
+        self.update();
         // Draw the next message timing from the distribution we use
         match self.current_time {
             currt if currt < self.limit => Some(self.get_next_message_timing()),

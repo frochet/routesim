@@ -1,4 +1,5 @@
 use crate::mixnodes::mixnode::Mixnode;
+use crate::usermodel::UserModel;
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 use std::collections::HashMap;
@@ -8,41 +9,35 @@ use std::io::BufReader;
 use std::path::Path;
 use std::vec::IntoIter;
 
-const PATH_LENGTH: i8 = 3;
+pub const PATH_LENGTH: i8 = 3;
 /// in byte
-const PAYLOAD_SIZE: usize = 2048;
+pub const  PAYLOAD_SIZE: usize = 2048;
+/// Default sample size for guards -- todo move this in clap
+pub const  GUARDS_SAMPLE_SIZE: usize = 5;
+
+pub const GUARDS_LAYER: usize = 1;
 
 /// A config is a set of mixes for each layer
 /// and a hashmap for unselected mixes.
 #[derive(Default)]
-pub struct Config {
+pub struct TopologyConfig {
     /// The path length
     layers: [Vec<Mixnode>; PATH_LENGTH as usize],
     wc_layers: [Box<Option<WeightedIndex<f64>>>; PATH_LENGTH as usize],
     unselected: HashMap<u32, Mixnode>,
-    /// Payload size of a mixnet message
-    #[allow(dead_code)]
-    payload_size: usize,
+    /// This topology is valid until valid_until's value.
+    valid_until: u64,
 }
 
-impl Config {
+impl TopologyConfig {
+
     pub fn new() -> Self {
-        Config {
+        TopologyConfig {
             wc_layers: [Box::new(None), Box::new(None), Box::new(None)],
-            payload_size: PAYLOAD_SIZE,
             ..Default::default()
         }
     }
 
-    /// This function is supposed to be callede every period to update the network topology
-    /// Currently we assume that it is stays the same
-    ///
-    /// In the future, we should support loading ordered config files from the disk, which would be
-    /// useful to replay an history of mixnet topologies
-    #[allow(dead_code)]
-    pub fn update(&mut self) -> &mut Config {
-        self
-    }
     #[allow(dead_code)]
     pub fn layers(&self) -> &[Vec<Mixnode>] {
         &self.layers
@@ -51,8 +46,28 @@ impl Config {
     pub fn unselected(&self) -> &HashMap<u32, Mixnode> {
         &self.unselected
     }
+    
+    /// sample n guards from layer l
+    pub fn sample_guards(
+        &self,
+        l: usize,
+        rng: &mut ThreadRng
+    ) -> IntoIter<&Mixnode> {
+        let mut sample_guards = vec![];
+        for _ in 0..GUARDS_SAMPLE_SIZE {
+            if let Some(wc) = &*self.wc_layers[l] {
+                sample_guards.push(&self.layers[l][wc.sample(rng)]);
+            }
+        }
+        sample_guards.into_iter()
+    }
+
     /// Sample a route from the network layer configation
-    pub fn sample_path(&self, rng: &mut ThreadRng) -> IntoIter<&Mixnode> {
+    pub fn sample_path(
+        &self,
+        rng: &mut ThreadRng,
+        guards: &[&Mixnode]
+    ) -> IntoIter<&Mixnode> {
         let mut path = vec![];
         // returns an owned iterator
         for i in 0..PATH_LENGTH {
@@ -62,29 +77,18 @@ impl Config {
         }
         path.into_iter()
     }
-    /// Check whether the three mixnode in path are compromised.
-    /// return true if they are, false otherwise.
-    pub fn is_path_malicious(&self, path: &mut IntoIter<&Mixnode>) -> bool {
-        let mut mal_mix = 0;
-        for hop in path {
-            if hop.is_malicious {
-                mal_mix += 1;
-            }
-        }
-        mal_mix == PATH_LENGTH
-    }
 }
 
 /// Load the network configuration from filename.
 ///
 /// Each line must be
 /// mixid [integer], weight [float], is_malicious [bool], layer [-1..2]
-pub fn load<P>(filename: P) -> Config
+pub fn load<P>(filename: P) -> TopologyConfig
 where
     P: AsRef<Path>,
 {
     let file = File::open(filename).expect("Unable to open the file");
-    let mut config: Config = Config::new();
+    let mut config: TopologyConfig = TopologyConfig::new();
     //skip header
     for line_r in BufReader::new(file).lines().skip(1) {
         if let Ok(line) = line_r {
@@ -117,7 +121,7 @@ where
 }
 
 #[test]
-fn load_test_config() {
+fn load_test_topology_config() {
     let config = load("testfiles/1000_137_Random_BP_layout.csv");
     let mix = &config.layers()[0][42];
     //42│20.430784458454426│False│0

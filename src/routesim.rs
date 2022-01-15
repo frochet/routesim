@@ -1,26 +1,63 @@
-use crate::config::Config;
-use crate::usermodel::UserModel;
+use crate::config::TopologyConfig;
+use crate::config::{PATH_LENGTH, PAYLOAD_SIZE, GUARDS_LAYER, GUARDS_SAMPLE_SIZE};
+use crate::mixnodes::mixnode::Mixnode;
+use crate::usermodel::*;
 use rand::prelude::*;
 use rayon::prelude::*;
+use std::vec::IntoIter;
 /// Contains information required for running the simulation
 #[derive(Default)]
 pub struct Runable {
     /// The number of users we want to simulate
     users: u32,
     /// The Network config
-    config: Config,
+    configs: Vec<TopologyConfig>,
     /// The number of virtual days for running the experiment
     days: u32,
+    /// Does this simulation use the guard principle?
+    use_guards: bool,
+    /// each topology lifetime -- we asume this to be unique (e.g., 1 day)
+    epoch: u32,
 }
 
 impl Runable {
-    pub fn new(users: u32, config: Config, days: u32) -> Self {
+
+    pub fn new(users: u32,
+               configs: Vec<TopologyConfig>,
+               days: u32,
+               epoch: u32,
+    ) -> Self {
         Runable {
-            config,
+            configs,
             users,
             days,
+            epoch,
+            use_guards: false,
         }
     }
+
+    pub fn with_guards(&mut self) -> &mut Self {
+        self.use_guards = true;
+        self
+    }
+
+    pub fn sample_path(&self, message_timing: u64, rng: &mut ThreadRng, guards: &[&Mixnode]) ->
+        IntoIter<&Mixnode> {
+        self.configs[(message_timing/self.epoch as u64) as usize].sample_path(rng, guards)
+    }
+
+    /// Check whether the three mixnode in path are compromised.
+    /// return true if they are, false otherwise.
+    pub fn is_path_malicious(&self, path: &mut IntoIter<&Mixnode>) -> bool {
+        let mut mal_mix = 0;
+        for hop in path {
+            if hop.is_malicious {
+                mal_mix += 1;
+            }
+        }
+        mal_mix == PATH_LENGTH
+    }
+
 
     fn format_message_timing(timing: u64) -> String {
         let mut datestr: String = "day ".into();
@@ -43,19 +80,22 @@ impl Runable {
     /// Run the simulation -- this function should output
     /// route taken for each user each time the user requires to send
     /// a message, which depends of the user model through time.
-    pub fn run<T>(&self)
+    pub fn run<'a, T>(&'a self)
     where
-        T: UserModel + Iterator<Item = u64>,
+        T: UserModel<'a> + Iterator<Item = u64>,
     {
         (0..self.users).into_par_iter().for_each(|user| {
-            let mut usermodel = T::new();
+            let mut usermodel = T::new(&self.configs);
             let mut rng = thread_rng();
             usermodel.set_limit(self.days_to_timestamp());
+            let mut userinfo = UserModelInfo::new(user, &self.configs);
             for message_timing in usermodel {
-                let path = self.config.sample_path(&mut rng);
+                // do we need to update the config?
+                userinfo.update(message_timing);
+                let path = self.sample_path(message_timing, &mut rng, userinfo.get_guards());
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing
-                let is_malicious = self.config.is_path_malicious(&mut path.clone());
+                let is_malicious = self.is_path_malicious(&mut path.clone());
                 println!(
                     "{}, {}, {}{}",
                     strdate,
