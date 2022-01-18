@@ -5,6 +5,10 @@ use crate::usermodel::*;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
+
+const DAY: u64 = 60 * 60 * 24;
+const HOUR: u64 = 60 * 60;
+
 /// Contains information required for running the simulation
 #[derive(Default)]
 pub struct Runable {
@@ -16,8 +20,10 @@ pub struct Runable {
     days: u32,
     /// Does this simulation use the guard principle?
     use_guards: bool,
-    /// each topology lifetime -- we asume this to be unique (e.g., 1 day)
+    /// each topology lifetime -- we assume this to be unique (e.g., 1 day)
     epoch: u32,
+    /// print to console --- default: false
+    to_console: bool,
 }
 
 impl Runable {
@@ -27,12 +33,17 @@ impl Runable {
             users,
             days,
             epoch,
-            use_guards: false,
+            ..Default::default()
         }
     }
 
     pub fn with_guards(&mut self) -> &mut Self {
         self.use_guards = true;
+        self
+    }
+
+    pub fn with_console(&mut self) -> &mut Self {
+        self.to_console = true;
         self
     }
 
@@ -60,10 +71,10 @@ impl Runable {
     fn format_message_timing(timing: u64) -> String {
         let mut datestr: String = "day ".into();
         let mut timing = timing;
-        let days_val: u64 = timing / (60 * 60 * 24);
-        timing -= days_val * 60 * 60 * 24;
-        let hours_val: u64 = timing / (60 * 60);
-        timing -= hours_val * 60 * 60;
+        let days_val: u64 = timing / DAY;
+        timing -= days_val * DAY;
+        let hours_val: u64 = timing / HOUR;
+        timing -= hours_val * HOUR;
         let mins_val: u64 = timing / 60;
         timing -= mins_val * 60;
         datestr.push_str(&format!(
@@ -72,8 +83,28 @@ impl Runable {
         ));
         datestr
     }
+
+    #[inline]
     fn days_to_timestamp(&self) -> u64 {
         u64::from(self.days) * 24 * 60 * 60
+    }
+
+    #[inline]
+    fn log_stdout(&self, user: u32, strdate: &str, path: IntoIter<&Mixnode>, is_malicious: bool) {
+        if self.to_console {
+            println!(
+                "{strdate} {user} {} {is_malicious};",
+                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
+                );
+        }
+        else {
+            // does not flush for each path (i.e., println should be one system call per call. This
+            // should not).
+            print!(
+                "{strdate} {user} {} {is_malicious};",
+                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
+            );
+        }
     }
     /// Run the simulation -- this function should output
     /// route taken for each user each time the user requires to send
@@ -88,19 +119,13 @@ impl Runable {
             usermodel.set_limit(self.days_to_timestamp());
             let mut userinfo = UserModelInfo::new(user, &self.configs);
             for message_timing in usermodel {
-                // do we need to updte userinfo relative to the current timing?
+                // do we need to update userinfo relative to the current timing?
                 userinfo.update(message_timing, self.epoch);
                 let path = self.sample_path(message_timing, &mut rng, userinfo.get_guards());
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing
                 let is_malicious = self.is_path_malicious(path.as_slice());
-                println!(
-                    "{}, {}, {}{}",
-                    strdate,
-                    user,
-                    path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
-                    is_malicious
-                );
+                self.log_stdout(user, &strdate, path, is_malicious);
             }
         })
     }

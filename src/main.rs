@@ -18,7 +18,7 @@ struct Opts {
         about = "Network config containing mixes"
     )]
     filename: String,
-    #[clap(short, long, default_value = "10", about = "Number of simulated days")]
+    #[clap(short, long, default_value = "1", about = "Number of simulated days")]
     days: u32,
     #[clap(
         short,
@@ -31,11 +31,18 @@ struct Opts {
     users: u32,
 
     #[clap(
+        short,
         long,
-        default_value = "86400",
+        default_value = "86401",
         about = "Validity period for a given topologies"
     )]
     epoch: u32,
+    #[clap(
+        short,
+        long,
+        about = "Do we aim to print to console?"
+    )]
+    to_console: bool,
 }
 
 fn main() {
@@ -45,12 +52,23 @@ fn main() {
 
     let mut topologies = vec![];
     topologies.push(netconf);
+    let n = topologies.len();
 
     let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch);
     runner.with_guards();
 
+    if opts.to_console {
+        runner.with_console();
+    }
+
+    // check whether the parameters days; config and epoch make sense
+    // panic otherwise.
+    if opts.epoch*n as u32 <= opts.days*24*60*60 {
+        panic!("Make sure you have enough configuration files, and that the epoch and days value make sense!")
+    }
+
     match &opts.usermod[..] {
         "simple" => runner.run::<SimpleModel>(),
-        _ => println!("We don't have that usermodel"),
+        _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),
     };
 }

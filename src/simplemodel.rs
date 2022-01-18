@@ -65,8 +65,9 @@ impl Iterator for SimpleModel<'_> {
         // update user information
         self.update();
         // Draw the next message timing from the distribution we use
-        match self.current_time {
-            currt if currt < self.limit => Some(self.get_next_message_timing()),
+        let next_timing = self.get_next_message_timing();
+        match next_timing {
+            currt if currt < self.limit => Some(currt),
             _ => None,
         }
     }
