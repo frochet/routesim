@@ -67,7 +67,7 @@ impl TopologyConfig {
         &self,
         rng: &mut ThreadRng,
         guards: &[&Mixnode]
-    ) -> IntoIter<&Mixnode> {
+    ) -> IntoIter<&Mixnode>{
         let mut path = vec![];
         // returns an owned iterator
         for i in 0..PATH_LENGTH {

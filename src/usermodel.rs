@@ -52,6 +52,7 @@ impl<'a> UserModelInfo<'a> {
         self.guards.as_ref()
     }
     /// Potentially changes this user guards 
-    pub fn update(&mut self, message_timing: u64) {
+    pub fn update(&mut self, message_timing: u64, epoch: u32) {
+        //let topo = self.topos[(message_timing/self.epoch as u64) as usize].are_guards_online()
     }
 }

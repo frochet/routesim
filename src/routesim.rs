@@ -48,10 +48,10 @@ impl Runable {
 
     /// Check whether the three mixnode in path are compromised.
     /// return true if they are, false otherwise.
-    pub fn is_path_malicious(&self, path: &mut IntoIter<&Mixnode>) -> bool {
+    pub fn is_path_malicious(&self, path: &[&Mixnode]) -> bool {
         let mut mal_mix = 0;
-        for hop in path {
-            if hop.is_malicious {
+        for i in (0..PATH_LENGTH) {
+            if path[i as usize].is_malicious {
                 mal_mix += 1;
             }
         }
@@ -91,11 +91,11 @@ impl Runable {
             let mut userinfo = UserModelInfo::new(user, &self.configs);
             for message_timing in usermodel {
                 // do we need to update the config?
-                userinfo.update(message_timing);
+                userinfo.update(message_timing, self.epoch);
                 let path = self.sample_path(message_timing, &mut rng, userinfo.get_guards());
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing
-                let is_malicious = self.is_path_malicious(&mut path.clone());
+                let is_malicious = self.is_path_malicious(path.as_slice());
                 println!(
                     "{}, {}, {}{}",
                     strdate,

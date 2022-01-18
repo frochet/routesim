@@ -3,8 +3,8 @@ This is a simplistic User simulator for path generation in a Mixnet.
 
 This program reads a mixnet configuration from a file and applies a user model to
 generate routes through time for a given number of users. It outputs to stdout
-the following kind of line:  
-  
+the following kind of line:
+
 ...  
 day 0, 21:20:0, 0, 230,668,96,false  
 ...  
