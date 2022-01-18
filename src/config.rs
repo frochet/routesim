@@ -2,7 +2,7 @@ use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::UserModel;
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;

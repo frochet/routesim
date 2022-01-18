@@ -53,8 +53,8 @@ impl<'a> UserModel<'a> for SimpleModel<'a> {
         self.limit = limit;
     }
 
-    /// Update any client information (e.g., guards), relative to the current timing
-    fn update(&mut self) {}
+    ///// Update any client information (e.g., guards), relative to the current timing
+    //fn update(&mut self) {}
 }
 
 impl Iterator for SimpleModel<'_> {
@@ -63,7 +63,7 @@ impl Iterator for SimpleModel<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         // update user information
-        self.update();
+        //self.update();
         // Draw the next message timing from the distribution we use
         let next_timing = self.get_next_message_timing();
         match next_timing {

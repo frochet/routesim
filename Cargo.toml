@@ -9,3 +9,10 @@ edition = "2018"
 rayon = "1.5"
 rand = "0.8.4"
 clap = "3.0.0-beta.4"
+rustc-hash = "1.0"
+
+[profile.release]
+lto = true
+debug = 1
+codegen-units = 1
+panic = "abort"

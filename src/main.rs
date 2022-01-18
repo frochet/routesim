@@ -37,11 +37,7 @@ struct Opts {
         about = "Validity period for a given topologies"
     )]
     epoch: u32,
-    #[clap(
-        short,
-        long,
-        about = "Do we aim to print to console?"
-    )]
+    #[clap(short, long, about = "Do we aim to print to console?")]
     to_console: bool,
 }
 
@@ -63,7 +59,7 @@ fn main() {
 
     // check whether the parameters days; config and epoch make sense
     // panic otherwise.
-    if opts.epoch*n as u32 <= opts.days*24*60*60 {
+    if opts.epoch * n as u32 <= opts.days * 24 * 60 * 60 {
         panic!("Make sure you have enough configuration files, and that the epoch and days value make sense!")
     }
 

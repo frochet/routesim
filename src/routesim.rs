@@ -60,7 +60,7 @@ impl Runable {
     /// return true if they are, false otherwise.
     pub fn is_path_malicious(&self, path: &[&Mixnode]) -> bool {
         let mut mal_mix = 0;
-        for i in (0..PATH_LENGTH) {
+        for i in 0..PATH_LENGTH {
             if path[i as usize].is_malicious {
                 mal_mix += 1;
             }
@@ -95,9 +95,8 @@ impl Runable {
             println!(
                 "{strdate} {user} {} {is_malicious};",
                 path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
-                );
-        }
-        else {
+            );
+        } else {
             // does not flush for each path (i.e., println should be one system call per call. This
             // should not).
             print!(
