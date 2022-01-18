@@ -1,5 +1,5 @@
 use crate::config::TopologyConfig;
-use crate::config::{PATH_LENGTH, PAYLOAD_SIZE, GUARDS_LAYER, GUARDS_SAMPLE_SIZE};
+use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, PATH_LENGTH, PAYLOAD_SIZE};
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use rand::prelude::*;
@@ -21,12 +21,7 @@ pub struct Runable {
 }
 
 impl Runable {
-
-    pub fn new(users: u32,
-               configs: Vec<TopologyConfig>,
-               days: u32,
-               epoch: u32,
-    ) -> Self {
+    pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32) -> Self {
         Runable {
             configs,
             users,
@@ -41,9 +36,13 @@ impl Runable {
         self
     }
 
-    pub fn sample_path(&self, message_timing: u64, rng: &mut ThreadRng, guards: &[&Mixnode]) ->
-        IntoIter<&Mixnode> {
-        self.configs[(message_timing/self.epoch as u64) as usize].sample_path(rng, guards)
+    pub fn sample_path(
+        &self,
+        message_timing: u64,
+        rng: &mut ThreadRng,
+        guards: &[&Mixnode],
+    ) -> IntoIter<&Mixnode> {
+        self.configs[(message_timing / self.epoch as u64) as usize].sample_path(rng, guards)
     }
 
     /// Check whether the three mixnode in path are compromised.
@@ -57,7 +56,6 @@ impl Runable {
         }
         mal_mix == PATH_LENGTH
     }
-
 
     fn format_message_timing(timing: u64) -> String {
         let mut datestr: String = "day ".into();
@@ -90,7 +88,7 @@ impl Runable {
             usermodel.set_limit(self.days_to_timestamp());
             let mut userinfo = UserModelInfo::new(user, &self.configs);
             for message_timing in usermodel {
-                // do we need to update the config?
+                // do we need to updte userinfo relative to the current timing?
                 userinfo.update(message_timing, self.epoch);
                 let path = self.sample_path(message_timing, &mut rng, userinfo.get_guards());
                 let strdate = Runable::format_message_timing(message_timing);

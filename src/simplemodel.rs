@@ -1,16 +1,15 @@
+use crate::config::TopologyConfig;
+use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, PATH_LENGTH, PAYLOAD_SIZE};
+use crate::mixnodes::mixnode::Mixnode;
 /**
  * A simple user model -- It samples messages within a [5, 15min] interval
  *
  * Currently does not send the message to any simulated user in particular, and it is one message
  * at a time.
  */
-
 use crate::usermodel::UserModel;
-use crate::mixnodes::mixnode::Mixnode;
-use crate::config::{PATH_LENGTH, PAYLOAD_SIZE, GUARDS_LAYER, GUARDS_SAMPLE_SIZE};
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
-use crate::config::TopologyConfig;
 
 const INTERVAL_MAX: u64 = 900;
 
@@ -24,18 +23,16 @@ pub struct SimpleModel<'a> {
     rng: ThreadRng,
     die: Uniform<u64>,
     // Mixnet topology -- should contain all topologies studied in our time period
-    topos: &'a[TopologyConfig],
+    topos: &'a [TopologyConfig],
 }
-
 
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
 impl<'a> UserModel<'a> for SimpleModel<'a> {
-
-    fn new(topos: &'a[TopologyConfig]) -> Self {
+    fn new(topos: &'a [TopologyConfig]) -> Self {
         // initialize the client with guards
 
-        let mut rng =  rand::thread_rng();
+        let mut rng = rand::thread_rng();
         SimpleModel {
             rng,
             die: Uniform::from(INTERVAL_MIN..INTERVAL_MAX),
@@ -57,8 +54,7 @@ impl<'a> UserModel<'a> for SimpleModel<'a> {
     }
 
     /// Update any client information (e.g., guards), relative to the current timing
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 }
 
 impl Iterator for SimpleModel<'_> {

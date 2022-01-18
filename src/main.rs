@@ -1,8 +1,8 @@
 mod config;
 mod mixnodes;
 mod routesim;
-mod usermodel;
 mod simplemodel;
+mod usermodel;
 
 use clap::{AppSettings, Clap};
 use routesim::Runable;
@@ -30,7 +30,11 @@ struct Opts {
     #[clap(long, default_value = "5000", about = "Number of users to simulate")]
     users: u32,
 
-    #[clap(long, default_value = "86400", about = "Validity period for a given topologies")]
+    #[clap(
+        long,
+        default_value = "86400",
+        about = "Validity period for a given topologies"
+    )]
     epoch: u32,
 }
 

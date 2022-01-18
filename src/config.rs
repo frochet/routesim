@@ -11,9 +11,9 @@ use std::vec::IntoIter;
 
 pub const PATH_LENGTH: i8 = 3;
 /// in byte
-pub const  PAYLOAD_SIZE: usize = 2048;
+pub const PAYLOAD_SIZE: usize = 2048;
 /// Default sample size for guards -- todo move this in clap
-pub const  GUARDS_SAMPLE_SIZE: usize = 5;
+pub const GUARDS_SAMPLE_SIZE: usize = 5;
 
 pub const GUARDS_LAYER: usize = 1;
 
@@ -30,7 +30,6 @@ pub struct TopologyConfig {
 }
 
 impl TopologyConfig {
-
     pub fn new() -> Self {
         TopologyConfig {
             wc_layers: [Box::new(None), Box::new(None), Box::new(None)],
@@ -46,13 +45,9 @@ impl TopologyConfig {
     pub fn unselected(&self) -> &HashMap<u32, Mixnode> {
         &self.unselected
     }
-    
+
     /// sample n guards from layer l
-    pub fn sample_guards(
-        &self,
-        l: usize,
-        rng: &mut ThreadRng
-    ) -> IntoIter<&Mixnode> {
+    pub fn sample_guards(&self, l: usize, rng: &mut ThreadRng) -> IntoIter<&Mixnode> {
         let mut sample_guards = vec![];
         for _ in 0..GUARDS_SAMPLE_SIZE {
             if let Some(wc) = &*self.wc_layers[l] {
@@ -63,11 +58,7 @@ impl TopologyConfig {
     }
 
     /// Sample a route from the network layer configation
-    pub fn sample_path(
-        &self,
-        rng: &mut ThreadRng,
-        guards: &[&Mixnode]
-    ) -> IntoIter<&Mixnode>{
+    pub fn sample_path(&self, rng: &mut ThreadRng, guards: &[&Mixnode]) -> IntoIter<&Mixnode> {
         let mut path = vec![];
         // returns an owned iterator
         for i in 0..PATH_LENGTH {
