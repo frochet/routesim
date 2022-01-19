@@ -37,8 +37,12 @@ struct Opts {
         about = "Validity period for a given topologies"
     )]
     epoch: u32,
-    #[clap(short, long, about = "Do we aim to print to console? Printing to console would display
-           one route per line")]
+    #[clap(
+        short,
+        long,
+        about = "Do we aim to print to console? Printing to console would display
+           one route per line"
+    )]
     to_console: bool,
     #[clap(short, about = "Do we desable guards?")]
     disable_guards: bool,

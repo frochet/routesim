@@ -39,10 +39,12 @@ impl<'a> UserModelInfo<'a> {
         let mut guards: Option<Vec<&'a Mixnode>> = None;
         let mut selected_guard: Option<&'a Mixnode> = None;
         if use_guards {
-            guards = Some(topos[0]
-                .sample_guards(GUARDS_LAYER, GUARDS_SAMPLE_SIZE, &mut rng)
-                .collect());
-            selected_guard  = Some(guards.as_ref().unwrap()[0]);
+            guards = Some(
+                topos[0]
+                    .sample_guards(GUARDS_LAYER, GUARDS_SAMPLE_SIZE, &mut rng)
+                    .collect(),
+            );
+            selected_guard = Some(guards.as_ref().unwrap()[0]);
         }
         UserModelInfo {
             userid,
@@ -78,7 +80,7 @@ impl<'a> UserModelInfo<'a> {
     #[inline]
     pub fn update(&mut self, message_timing: u64, epoch: u32) {
         let idx = (message_timing / epoch as u64) as usize;
-        if idx > self.curr_idx  && self.guards.is_some(){
+        if idx > self.curr_idx && self.guards.is_some() {
             // okaay there's a potential update to do.
             self.curr_idx = idx as usize;
             // if our selected guards is still online, do nothing
@@ -99,31 +101,24 @@ impl<'a> UserModelInfo<'a> {
                         Some(guards) => {
                             let guard_idx = guards.len();
                             guards.extend(self.topos[self.curr_idx].sample_guards(
-                                    GUARDS_LAYER,
-                                    GUARDS_SAMPLE_SIZE_EXTEND,
-                                    &mut self.rng,
-                                    ));
+                                GUARDS_LAYER,
+                                GUARDS_SAMPLE_SIZE_EXTEND,
+                                &mut self.rng,
+                            ));
                             // some checks
                             if guards.len() <= guard_idx {
                                 panic!(
-                                    "Did the guard len got properly extended? len: {}",
+                                    "Did the guard len got properly extend? len: {}",
                                     guards.len()
-                                    );
+                                );
                             }
-                            //if !self.is_guard_online(self.curr_idx, guards[guard_idx].mixid) {
-                                //panic!(
-                                    //"The selected guard does not appear online! guard: {:?}",
-                                    //guards[guard_idx]
-                                    //);
-                            //}
                             // remember the selected guard
                             self.selected_guard = Some(guards[guard_idx]);
-                        },
+                        }
                         _ => panic!("guards aren't expected to be None"),
                     }
                 }
             }
-            //let topo = self.topos[self.curr_idx].are_guards_online()
         }
     }
 }
