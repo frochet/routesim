@@ -14,7 +14,9 @@ pub const PATH_LENGTH: i8 = 3;
 pub const PAYLOAD_SIZE: usize = 2048;
 /// Default sample size for guards -- todo move this in clap
 pub const GUARDS_SAMPLE_SIZE: usize = 5;
-
+/// How much do we extend the sample size each time we ran out of guard?
+pub const GUARDS_SAMPLE_SIZE_EXTEND: usize = 2;
+/// guards are use in layer... [0..n[
 pub const GUARDS_LAYER: usize = 1;
 
 /// A config is a set of mixes for each layer
@@ -47,7 +49,7 @@ impl TopologyConfig {
     }
 
     /// sample n guards from layer l
-    pub fn sample_guards(&self, l: usize, rng: &mut ThreadRng) -> IntoIter<&Mixnode> {
+    pub fn sample_guards<'a>(&'a self, l: usize, n_guards: usize, rng: &mut ThreadRng) -> IntoIter<&'a Mixnode> {
         let mut sample_guards = vec![];
         for _ in 0..GUARDS_SAMPLE_SIZE {
             if let Some(wc) = &*self.wc_layers[l] {
@@ -57,13 +59,19 @@ impl TopologyConfig {
         sample_guards.into_iter()
     }
 
-    /// Sample a route from the network layer configation
-    pub fn sample_path(&self, rng: &mut ThreadRng, guards: &[&Mixnode]) -> IntoIter<&Mixnode> {
+    /// Sample a route from the network layer configuration
+    #[inline]
+    pub fn sample_path<'a>(&'a self, rng: &mut ThreadRng, guard: Option<&'a Mixnode>) -> IntoIter<&'a Mixnode> {
         let mut path = vec![];
         // returns an owned iterator
         for i in 0..PATH_LENGTH {
             if let Some(wc) = &*self.wc_layers[i as usize] {
-                path.push(&self.layers[i as usize][wc.sample(rng)]);
+                if i as usize == GUARDS_LAYER && guard.is_some() {
+                    path.push(guard.unwrap());
+                }
+                else {
+                    path.push(&self.layers[i as usize][wc.sample(rng)]);
+                }
             }
         }
         path.into_iter()

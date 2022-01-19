@@ -47,13 +47,14 @@ impl Runable {
         self
     }
 
-    pub fn sample_path(
-        &self,
+    #[inline]
+    pub fn sample_path<'a>(
+        &'a self,
         message_timing: u64,
         rng: &mut ThreadRng,
-        guards: &[&Mixnode],
-    ) -> IntoIter<&Mixnode> {
-        self.configs[(message_timing / self.epoch as u64) as usize].sample_path(rng, guards)
+        guard: Option<&'a Mixnode>,
+    ) -> IntoIter<&'a Mixnode> {
+        self.configs[(message_timing / self.epoch as u64) as usize].sample_path(rng, guard)
     }
 
     /// Check whether the three mixnode in path are compromised.
@@ -120,7 +121,7 @@ impl Runable {
             for message_timing in usermodel {
                 // do we need to update userinfo relative to the current timing?
                 userinfo.update(message_timing, self.epoch);
-                let path = self.sample_path(message_timing, &mut rng, userinfo.get_guards());
+                let path = self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing
                 let is_malicious = self.is_path_malicious(path.as_slice());
