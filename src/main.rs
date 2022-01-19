@@ -18,7 +18,7 @@ struct Opts {
         about = "Network config containing mixes"
     )]
     filename: String,
-    #[clap(short, long, default_value = "1", about = "Number of simulated days")]
+    #[clap(long, default_value = "1", about = "Number of simulated days")]
     days: u32,
     #[clap(
         short,
@@ -37,8 +37,11 @@ struct Opts {
         about = "Validity period for a given topologies"
     )]
     epoch: u32,
-    #[clap(short, long, about = "Do we aim to print to console?")]
+    #[clap(short, long, about = "Do we aim to print to console? Printing to console would display
+           one route per line")]
     to_console: bool,
+    #[clap(short, about = "Do we desable guards?")]
+    disable_guards: bool,
 }
 
 fn main() {
@@ -51,7 +54,10 @@ fn main() {
     let n = topologies.len();
 
     let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch);
-    runner.with_guards();
+
+    if !opts.disable_guards {
+        runner.with_guards();
+    }
 
     if opts.to_console {
         runner.with_console();

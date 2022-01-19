@@ -117,7 +117,7 @@ impl Runable {
             let mut usermodel = T::new(&self.configs);
             let mut rng = thread_rng();
             usermodel.set_limit(self.days_to_timestamp());
-            let mut userinfo = UserModelInfo::new(user, &self.configs);
+            let mut userinfo = UserModelInfo::new(user, &self.configs, self.use_guards);
             for message_timing in usermodel {
                 // do we need to update userinfo relative to the current timing?
                 userinfo.update(message_timing, self.epoch);
