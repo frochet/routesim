@@ -49,7 +49,12 @@ impl TopologyConfig {
     }
 
     /// sample n guards from layer l
-    pub fn sample_guards<'a>(&'a self, l: usize, n_guards: usize, rng: &mut ThreadRng) -> IntoIter<&'a Mixnode> {
+    pub fn sample_guards<'a>(
+        &'a self,
+        l: usize,
+        n_guards: usize,
+        rng: &mut ThreadRng,
+    ) -> IntoIter<&'a Mixnode> {
         let mut sample_guards = vec![];
         for _ in 0..GUARDS_SAMPLE_SIZE {
             if let Some(wc) = &*self.wc_layers[l] {
@@ -61,15 +66,18 @@ impl TopologyConfig {
 
     /// Sample a route from the network layer configuration
     #[inline]
-    pub fn sample_path<'a>(&'a self, rng: &mut ThreadRng, guard: Option<&'a Mixnode>) -> IntoIter<&'a Mixnode> {
+    pub fn sample_path<'a>(
+        &'a self,
+        rng: &mut ThreadRng,
+        guard: Option<&'a Mixnode>,
+    ) -> IntoIter<&'a Mixnode> {
         let mut path = vec![];
         // returns an owned iterator
         for i in 0..PATH_LENGTH {
             if let Some(wc) = &*self.wc_layers[i as usize] {
                 if i as usize == GUARDS_LAYER && guard.is_some() {
                     path.push(guard.unwrap());
-                }
-                else {
+                } else {
                     path.push(&self.layers[i as usize][wc.sample(rng)]);
                 }
             }
@@ -131,7 +139,7 @@ fn load_test_topology_config() {
 fn test_sample_path() {
     let config = load("testfiles/1000_137_Random_BP_layout.csv");
     let mut rng = thread_rng();
-    let path = config.sample_path(&mut rng);
+    let path = config.sample_path(&mut rng, None);
     let path = path.collect::<Vec<_>>();
     assert_eq!(path.len(), 3);
 }

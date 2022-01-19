@@ -121,7 +121,8 @@ impl Runable {
             for message_timing in usermodel {
                 // do we need to update userinfo relative to the current timing?
                 userinfo.update(message_timing, self.epoch);
-                let path = self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
+                let path =
+                    self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
                 let strdate = Runable::format_message_timing(message_timing);
                 // write out the path for this message_timing
                 let is_malicious = self.is_path_malicious(path.as_slice());
