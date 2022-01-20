@@ -13,7 +13,7 @@ const INTERVAL_MAX: u64 = 900;
 
 const INTERVAL_MIN: u64 = 300;
 
-pub struct SimpleModel<'a> {
+pub struct SimpleSynchronousModel<'a> {
     /// timestamp of current time, starting at 0.
     current_time: u64,
     /// the max value of a timing message
@@ -27,12 +27,12 @@ pub struct SimpleModel<'a> {
 
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
-impl<'a> UserModel<'a> for SimpleModel<'a> {
+impl<'a> UserModel<'a> for SimpleSynchronousModel<'a> {
     fn new(topos: &'a [TopologyConfig]) -> Self {
         // initialize the client with guards
 
         let rng = rand::thread_rng();
-        SimpleModel {
+        SimpleSynchronousModel {
             rng,
             die: Uniform::from(INTERVAL_MIN..INTERVAL_MAX),
             current_time: 0,
@@ -56,7 +56,7 @@ impl<'a> UserModel<'a> for SimpleModel<'a> {
     //fn update(&mut self) {}
 }
 
-impl Iterator for SimpleModel<'_> {
+impl Iterator for SimpleSynchronousModel<'_> {
     // "%days, %hh,%mm,%ss
     type Item = u64;
 

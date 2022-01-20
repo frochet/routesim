@@ -5,6 +5,8 @@ use crate::usermodel::*;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
+//use rustc_hash::FxHashMap as HashMap;
+use std::collections::HashMap;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -106,29 +108,42 @@ impl Runable {
             );
         }
     }
+
+    pub fn init<'a>(&'a self) -> Vec<UserModelInfo<'a>> {
+        // create first all model info
+        let userinfos = (0..self.users)
+            .map(|user| UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards))
+            .collect();
+        // add the mpc channels
+        userinfos
+    }
+
     /// Run the simulation -- this function should output
     /// route taken for each user each time the user requires to send
     /// a message, which depends of the user model through time.
-    pub fn run<'a, T>(&'a self)
+    pub fn run<'a, T>(&'a self, mut userinfos: Vec<UserModelInfo<'a>>)
     where
         T: UserModel<'a> + Iterator<Item = u64>,
     {
-        (0..self.users).into_par_iter().for_each(|user| {
-            let mut usermodel = T::new(&self.configs);
-            let mut rng = thread_rng();
-            usermodel.set_limit(self.days_to_timestamp());
-            let mut userinfo = UserModelInfo::new(user, &self.configs, self.use_guards);
-            for message_timing in usermodel {
-                // do we need to update userinfo relative to the current timing?
-                userinfo.update(message_timing, self.epoch);
-                let path =
-                    self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
-                let strdate = Runable::format_message_timing(message_timing);
-                // write out the path for this message_timing
-                let is_malicious = self.is_path_malicious(path.as_slice());
-                self.log_stdout(user, &strdate, path, is_malicious);
-            }
-        })
+        (0..self.users)
+            .into_par_iter()
+            .zip(userinfos)
+            .for_each(|(user, mut userinfo)| {
+                let mut usermodel = T::new(&self.configs);
+                let mut rng = thread_rng();
+                usermodel.set_limit(self.days_to_timestamp());
+                //let userinfo = &mut userinfos[user as usize];
+                for message_timing in usermodel {
+                    // do we need to update userinfo relative to the current timing?
+                    userinfo.update(message_timing, self.epoch, &mut rng);
+                    let path =
+                        self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
+                    let strdate = Runable::format_message_timing(message_timing);
+                    // write out the path for this message_timing
+                    let is_malicious = self.is_path_malicious(path.as_slice());
+                    self.log_stdout(user, &strdate, path, is_malicious);
+                }
+            })
     }
 }
 

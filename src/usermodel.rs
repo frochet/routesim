@@ -29,13 +29,13 @@ pub struct UserModelInfo<'a> {
     /// The guard we're currently using
     selected_guard: Option<&'a Mixnode>,
 
-    rng: ThreadRng,
+    epoch: u32,
 
     curr_idx: usize,
 }
 
 impl<'a> UserModelInfo<'a> {
-    pub fn new(userid: u32, topos: &'a [TopologyConfig], use_guards: bool) -> Self {
+    pub fn new(userid: u32, topos: &'a [TopologyConfig], epoch: u32, use_guards: bool) -> Self {
         let mut rng = rand::thread_rng();
         let mut guards: Option<Vec<&'a Mixnode>> = None;
         let mut selected_guard: Option<&'a Mixnode> = None;
@@ -52,7 +52,7 @@ impl<'a> UserModelInfo<'a> {
             topos,
             guards,
             selected_guard,
-            rng,
+            epoch,
             curr_idx: 0,
         }
     }
@@ -79,7 +79,7 @@ impl<'a> UserModelInfo<'a> {
     }
     /// Potentially changes this user guards
     #[inline]
-    pub fn update(&mut self, message_timing: u64, epoch: u32) {
+    pub fn update(&mut self, message_timing: u64, epoch: u32, rng: &mut ThreadRng) {
         let idx = (message_timing / epoch as u64) as usize;
         if idx > self.curr_idx && self.guards.is_some() {
             // okaay there's a potential update to do.
@@ -104,7 +104,7 @@ impl<'a> UserModelInfo<'a> {
                             guards.extend(self.topos[self.curr_idx].sample_guards(
                                 GUARDS_LAYER,
                                 GUARDS_SAMPLE_SIZE_EXTEND,
-                                &mut self.rng,
+                                rng,
                             ));
                             // some checks
                             if guards.len() <= guard_idx {

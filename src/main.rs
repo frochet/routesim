@@ -73,8 +73,11 @@ fn main() {
         panic!("Make sure you have enough configuration files, and that the epoch and days value make sense!")
     }
 
+    let userinfos = runner.init();
     match &opts.usermod[..] {
-        "simple" => runner.run::<SimpleModel>(),
+        "simple" => {
+            runner.run::<SimpleSynchronousModel>(userinfos);
+        }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),
     };
 }
