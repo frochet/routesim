@@ -1,5 +1,5 @@
 use crate::config::TopologyConfig;
-use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, PATH_LENGTH, PAYLOAD_SIZE};
+use crate::config::PATH_LENGTH;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use rand::prelude::*;

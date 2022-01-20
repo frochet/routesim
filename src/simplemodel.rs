@@ -1,6 +1,4 @@
 use crate::config::TopologyConfig;
-use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, PATH_LENGTH, PAYLOAD_SIZE};
-use crate::mixnodes::mixnode::Mixnode;
 /**
  * A simple user model -- It samples messages within a [5, 15min] interval
  *
@@ -23,6 +21,7 @@ pub struct SimpleModel<'a> {
     rng: ThreadRng,
     die: Uniform<u64>,
     // Mixnet topology -- should contain all topologies studied in our time period
+    #[allow(dead_code)]
     topos: &'a [TopologyConfig],
 }
 
@@ -32,7 +31,7 @@ impl<'a> UserModel<'a> for SimpleModel<'a> {
     fn new(topos: &'a [TopologyConfig]) -> Self {
         // initialize the client with guards
 
-        let mut rng = rand::thread_rng();
+        let rng = rand::thread_rng();
         SimpleModel {
             rng,
             die: Uniform::from(INTERVAL_MIN..INTERVAL_MAX),

@@ -1,5 +1,4 @@
 use crate::mixnodes::mixnode::Mixnode;
-use crate::usermodel::UserModel;
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
@@ -10,6 +9,7 @@ use std::path::Path;
 use std::vec::IntoIter;
 
 pub const PATH_LENGTH: i8 = 3;
+#[allow(dead_code)]
 /// in byte
 pub const PAYLOAD_SIZE: usize = 2048;
 /// Default sample size for guards -- todo move this in clap
@@ -28,6 +28,7 @@ pub struct TopologyConfig {
     wc_layers: [Box<Option<WeightedIndex<f64>>>; PATH_LENGTH as usize],
     unselected: HashMap<u32, Mixnode>,
     /// This topology is valid until valid_until's value.
+    #[allow(dead_code)]
     valid_until: u64,
 }
 
@@ -56,7 +57,7 @@ impl TopologyConfig {
         rng: &mut ThreadRng,
     ) -> IntoIter<&'a Mixnode> {
         let mut sample_guards = vec![];
-        for _ in 0..GUARDS_SAMPLE_SIZE {
+        for _ in 0..n_guards {
             if let Some(wc) = &*self.wc_layers[l] {
                 sample_guards.push(&self.layers[l][wc.sample(rng)]);
             }

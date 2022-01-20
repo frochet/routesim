@@ -20,6 +20,7 @@ pub trait UserModel<'a> {
 
 // + things potentially common to any user model
 pub struct UserModelInfo<'a> {
+    #[allow(dead_code)]
     userid: u32,
     /// Mixnet topology
     topos: &'a [TopologyConfig],
