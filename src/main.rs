@@ -2,8 +2,8 @@ mod config;
 mod mixnodes;
 mod routesim;
 mod simplemodel;
-mod usermodel;
 mod userasyncmodel;
+mod usermodel;
 
 use clap::{AppSettings, Clap};
 use routesim::Runable;

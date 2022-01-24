@@ -1,12 +1,12 @@
 use crate::config::TopologyConfig;
 use crate::config::PATH_LENGTH;
 use crate::mixnodes::mixnode::Mixnode;
-use crate::usermodel::*;
 use crate::userasyncmodel::UserRequest;
+use crate::usermodel::*;
+use crossbeam_channel::unbounded;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
-use crossbeam_channel::unbounded;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -29,7 +29,6 @@ pub struct Runable {
 }
 
 impl Runable {
-
     pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32) -> Self {
         Runable {
             configs,
@@ -111,26 +110,34 @@ impl Runable {
     }
 
     pub fn init_sync<'a, T, U>(&'a self) -> Vec<T>
-        where T: UserModel<'a, U>,
+    where
+        T: UserModel<'a, U>,
     {
         let usermodels: Vec<_> = (0..self.users)
-            .map(|user|
-                    T::new(UserModelInfo::new(user, &self.configs,
-                                           self.epoch, self.use_guards)))
+            .map(|user| {
+                T::new(
+                    self.users,
+                    UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
+                )
+            })
             .collect();
         usermodels
     }
 
     pub fn init<'a, T, U>(&'a self) -> Vec<T>
-        where T: UserModel<'a, U>,
-              U: UserRequestIterator,
+    where
+        T: UserModel<'a, U>,
+        U: UserRequestIterator,
     {
         // create first all model info
         // add the mpc channels
         let mut usermodels: Vec<_> = (0..self.users)
-            .map(|user|
-                    T::new(UserModelInfo::new(user, &self.configs,
-                                           self.epoch, self.use_guards)))
+            .map(|user| {
+                T::new(
+                    self.users,
+                    UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
+                )
+            })
             .collect();
         for i in 0..self.users {
             // let's create one receiver per user, and give
@@ -165,18 +172,19 @@ impl Runable {
                 //let userinfo = &mut userinfos[user as usize];
                 for (message_timing, guard) in &mut usermodel {
                     // do we need to update userinfo relative to the current timing?
-                    let path =
-                        self.sample_path(message_timing, &mut rng, guard);
+                    let path = self.sample_path(message_timing, &mut rng, guard);
                     let strdate = Runable::format_message_timing(message_timing);
                     // write out the path for this message_timing
                     let is_malicious = self.is_path_malicious(path.as_slice());
                     self.log_stdout(user, &strdate, path, is_malicious);
                 }
                 // todo drop the sender :-), or make it drop into the iterator
-                //usermodel.update(0);
-            })
-
-
+            });
+        // now check the UserRequests, if any
+        usermodels
+            .into_par_iter()
+            .filter(|usermodel| usermodel.model_kind() == AnonModelKind::BothPeers)
+            .for_each(|usermodel| {})
     }
 }
 

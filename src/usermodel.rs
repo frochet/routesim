@@ -4,19 +4,19 @@
 use crate::config::TopologyConfig;
 use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, GUARDS_SAMPLE_SIZE_EXTEND};
 use crate::mixnodes::mixnode::Mixnode;
+use crate::userasyncmodel::UserRequest;
+use crossbeam_channel::unbounded;
+use crossbeam_channel::{Receiver, Sender};
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
-use crossbeam_channel::unbounded;
-use crossbeam_channel::{Sender, Receiver};
 
+#[derive(PartialEq)]
 pub enum AnonModelKind {
     ClientOnly,
     BothPeers,
 }
 pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
-
-
-    fn new(uinfo: UserModelInfo<'a,T>) -> Self;
+    fn new(tot_users: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
     /// user model
     fn get_current_time(&self) -> u64;
@@ -31,7 +31,6 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
     fn update(&mut self, message_timing: u64);
 }
 
-
 /// This iterator is aimed to be from one user to another to make them fetch
 /// the data sent to them.
 ///
@@ -40,14 +39,19 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
 /// The iterator should start from the request's timing + some delay, and make sure
 /// it does not go over the limit
 pub trait UserRequestIterator: Iterator<Item = u64> {
-
     type RequestTime;
+    type RequestSize;
+
+    fn new(request_time: u64, request_size: usize, peers: (u32, u32)) -> Self;
+
+    fn get_peers(&self) -> (u32, u32);
+
+    fn get_request_size(&self) -> Self::RequestSize;
 
     fn get_request_time(&self) -> Self::RequestTime;
 
     fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
-
 
 // potentially common to any user model
 pub struct UserModelInfo<'a, T> {
@@ -94,6 +98,10 @@ impl<'a, T> UserModelInfo<'a, T> {
         }
     }
 
+    pub fn get_userid(&self) -> u32 {
+        self.userid
+    }
+
     pub fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self {
         self.receiver = Some(r);
         self
@@ -101,6 +109,16 @@ impl<'a, T> UserModelInfo<'a, T> {
 
     pub fn add_sender(&mut self, user: u32, sender: Sender<T>) {
         self.senders.insert(user, sender);
+    }
+
+    pub fn send_request(&self, req: T) -> Result<(), crossbeam_channel::SendError<T>>
+    where
+        T: UserRequestIterator,
+    {
+        match self.senders.get(&req.get_peers().1) {
+            None => panic!("BUG: Missing sender for {} ", req.get_peers().1),
+            Some(sender) => sender.send(req),
+        }
     }
 
     #[inline]
@@ -125,7 +143,7 @@ impl<'a, T> UserModelInfo<'a, T> {
     }
     /// Potentially changes this user guards
     #[inline]
-    pub fn update<R: Rng+?Sized>(&mut self, message_timing: u64, rng: &mut R) {
+    pub fn update<R: Rng + ?Sized>(&mut self, message_timing: u64, rng: &mut R) {
         let idx = (message_timing / self.epoch as u64) as usize;
         if idx > self.curr_idx && self.guards.is_some() {
             // okaay there's a potential update to do.
@@ -139,8 +157,9 @@ impl<'a, T> UserModelInfo<'a, T> {
                 .skip_while(|guard| !self.is_guard_online(self.curr_idx, guard.mixid))
                 .take(1);
             match guard_iter.next() {
+                // We have an online guard. So be it.
                 Some(guard) => self.selected_guard = Some(guard),
-                // We need to extend the guard list
+                // We have no online guard. We need to extend the guard list
                 None => {
                     // this should be the idx to take a selected guard after we extend
                     // the guard list

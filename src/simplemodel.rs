@@ -1,17 +1,15 @@
+use crate::mixnodes::mixnode::Mixnode;
 /**
  * A simple user model -- It samples messages within a [5, 15min] interval
  *
  * Currently does not send the message to any simulated user in particular, and it is one message
  * at a time.
  */
-use crate::config::TopologyConfig;
-use crate::usermodel::{UserModel, UserModelInfo, AnonModelKind};
-use crate::mixnodes::mixnode::Mixnode;
+use crate::usermodel::{AnonModelKind, UserModel, UserModelInfo};
+use crossbeam_channel::{Receiver, Sender};
 use rand::distributions::{Distribution, Uniform};
-use rand::prelude::*;
-use rand::{Rng, SeedableRng};
 use rand::rngs::SmallRng;
-use crossbeam_channel::{Sender, Receiver};
+use rand::SeedableRng;
 
 const INTERVAL_MAX: u64 = 900;
 
@@ -30,7 +28,7 @@ pub struct SimpleSynchronousModel<'a, T> {
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
 impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
-    fn new(uinfo: UserModelInfo<'a, T>) -> Self {
+    fn new(tot_users: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         // initialize the client with guards
 
         let rng = SmallRng::from_entropy();
@@ -64,8 +62,7 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
         self
     }
     /// does not use channels
-    fn add_sender(&mut self, user: u32, s: Sender<T>) {
-    }
+    fn add_sender(&mut self, user: u32, s: Sender<T>) {}
 
     ///// Update any client information (e.g., guards), relative to the current timing
     fn update(&mut self, message_timing: u64) {
@@ -81,9 +78,11 @@ impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
         // update user information
         // Draw the next message timing from the distribution we use
         let next_timing = self.get_next_message_timing();
-        //self.update(next_timing);
         match next_timing {
-            currt if currt < self.limit => Some((currt, self.uinfo.get_selected_guard())),
+            currt if currt < self.limit => {
+                self.update(currt);
+                Some((currt, self.uinfo.get_selected_guard()))
+            }
             _ => None,
         }
     }
