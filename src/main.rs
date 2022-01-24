@@ -3,10 +3,12 @@ mod mixnodes;
 mod routesim;
 mod simplemodel;
 mod usermodel;
+mod userasyncmodel;
 
 use clap::{AppSettings, Clap};
 use routesim::Runable;
 use simplemodel::*;
+use userasyncmodel::*;
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -73,10 +75,10 @@ fn main() {
         panic!("Make sure you have enough configuration files, and that the epoch and days value make sense!")
     }
 
-    let userinfos = runner.init();
     match &opts.usermod[..] {
         "simple" => {
-            runner.run::<SimpleSynchronousModel>(userinfos);
+            let usermodels = runner.init_sync::<SimpleSynchronousModel<()>, ()>();
+            runner.run(usermodels);
         }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),
     };

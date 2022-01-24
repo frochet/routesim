@@ -2,11 +2,11 @@ use crate::config::TopologyConfig;
 use crate::config::PATH_LENGTH;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
+use crate::userasyncmodel::UserRequest;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
-//use rustc_hash::FxHashMap as HashMap;
-use std::collections::HashMap;
+use crossbeam_channel::unbounded;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -29,6 +29,7 @@ pub struct Runable {
 }
 
 impl Runable {
+
     pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32) -> Self {
         Runable {
             configs,
@@ -109,41 +110,73 @@ impl Runable {
         }
     }
 
-    pub fn init<'a>(&'a self) -> Vec<UserModelInfo<'a>> {
-        // create first all model info
-        let userinfos = (0..self.users)
-            .map(|user| UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards))
+    pub fn init_sync<'a, T, U>(&'a self) -> Vec<T>
+        where T: UserModel<'a, U>,
+    {
+        let usermodels: Vec<_> = (0..self.users)
+            .map(|user|
+                    T::new(UserModelInfo::new(user, &self.configs,
+                                           self.epoch, self.use_guards)))
             .collect();
+        usermodels
+    }
+
+    pub fn init<'a, T, U>(&'a self) -> Vec<T>
+        where T: UserModel<'a, U>,
+              U: UserRequestIterator,
+    {
+        // create first all model info
         // add the mpc channels
-        userinfos
+        let mut usermodels: Vec<_> = (0..self.users)
+            .map(|user|
+                    T::new(UserModelInfo::new(user, &self.configs,
+                                           self.epoch, self.use_guards)))
+            .collect();
+        for i in 0..self.users {
+            // let's create one receiver per user, and give
+            // one sender to every other users
+            let (s, r) = unbounded();
+            usermodels[i as usize].with_receiver(r);
+            for j in 0..self.users {
+                if j != i {
+                    usermodels[j as usize].add_sender(i, s.clone())
+                }
+            }
+            usermodels[i as usize].add_sender(i, s);
+        }
+        usermodels
     }
 
     /// Run the simulation -- this function should output
     /// route taken for each user each time the user requires to send
     /// a message, which depends of the user model through time.
-    pub fn run<'a, T>(&'a self, mut userinfos: Vec<UserModelInfo<'a>>)
+    pub fn run<'a, T, U>(&'a self, mut usermodels: Vec<T>)
     where
-        T: UserModel<'a> + Iterator<Item = u64>,
+        T: UserModel<'a, U> + Send,
     {
+        // for_each should block until they all completed
         (0..self.users)
             .into_par_iter()
-            .zip(userinfos)
-            .for_each(|(user, mut userinfo)| {
-                let mut usermodel = T::new(&self.configs);
+            .zip(&mut usermodels)
+            .for_each(|(user, mut usermodel)| {
                 let mut rng = thread_rng();
+                // move this in the init part?
                 usermodel.set_limit(self.days_to_timestamp());
                 //let userinfo = &mut userinfos[user as usize];
-                for message_timing in usermodel {
+                for (message_timing, guard) in &mut usermodel {
                     // do we need to update userinfo relative to the current timing?
-                    userinfo.update(message_timing, self.epoch, &mut rng);
                     let path =
-                        self.sample_path(message_timing, &mut rng, userinfo.get_selected_guard());
+                        self.sample_path(message_timing, &mut rng, guard);
                     let strdate = Runable::format_message_timing(message_timing);
                     // write out the path for this message_timing
                     let is_malicious = self.is_path_malicious(path.as_slice());
                     self.log_stdout(user, &strdate, path, is_malicious);
                 }
+                // todo drop the sender :-), or make it drop into the iterator
+                //usermodel.update(0);
             })
+
+
     }
 }
 

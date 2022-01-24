@@ -7,9 +7,10 @@ edition = "2018"
 
 [dependencies]
 rayon = "1.5"
-rand = "0.8.4"
+rand = {version = "0.8.4", features=["small_rng"]}
 clap = "3.0.0-beta.4"
 rustc-hash = "1.0"
+crossbeam-channel = "0.5.2"
 
 [profile.release]
 lto = true

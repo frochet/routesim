@@ -50,11 +50,11 @@ impl TopologyConfig {
     }
 
     /// sample n guards from layer l
-    pub fn sample_guards<'a>(
+    pub fn sample_guards<'a, R: Rng + ?Sized>(
         &'a self,
         l: usize,
         n_guards: usize,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> IntoIter<&'a Mixnode> {
         let mut sample_guards = vec![];
         for _ in 0..n_guards {
@@ -67,9 +67,9 @@ impl TopologyConfig {
 
     /// Sample a route from the network layer configuration
     #[inline]
-    pub fn sample_path<'a>(
+    pub fn sample_path<'a, R: Rng + ?Sized>(
         &'a self,
-        rng: &mut ThreadRng,
+        rng: &mut R,
         guard: Option<&'a Mixnode>,
     ) -> IntoIter<&'a Mixnode> {
         let mut path = vec![];
