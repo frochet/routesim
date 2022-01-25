@@ -77,7 +77,11 @@ fn main() {
 
     match &opts.usermod[..] {
         "simple" => {
-            let usermodels = runner.init_sync::<SimpleSynchronousModel<()>, ()>();
+            let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
+            runner.run(usermodels);
+        },
+        "email" => {
+            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
         }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),

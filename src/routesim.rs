@@ -1,7 +1,6 @@
 use crate::config::TopologyConfig;
 use crate::config::PATH_LENGTH;
 use crate::mixnodes::mixnode::Mixnode;
-use crate::userasyncmodel::UserRequest;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
 use rand::prelude::*;
@@ -160,6 +159,7 @@ impl Runable {
     pub fn run<'a, T, U>(&'a self, mut usermodels: Vec<T>)
     where
         T: UserModel<'a, U> + Send,
+        U: UserRequestIterator
     {
         // for_each should block until they all completed
         (0..self.users)
@@ -178,13 +178,32 @@ impl Runable {
                     let is_malicious = self.is_path_malicious(path.as_slice());
                     self.log_stdout(user, &strdate, path, is_malicious);
                 }
-                // todo drop the sender :-), or make it drop into the iterator
+                // Drop the senders -- i.e., the receiver should not block when 
+                // all messages are read
+                if let AnonModelKind::BothPeers = usermodel.model_kind() {
+                    usermodel.drop_senders();
+                }
             });
         // now check the UserRequests, if any
         usermodels
             .into_par_iter()
             .filter(|usermodel| usermodel.model_kind() == AnonModelKind::BothPeers)
-            .for_each(|usermodel| {})
+            .for_each(|usermodel| {
+                let mut rng = thread_rng();
+                //XXX should we parallel iter on the channel recv()?
+                while let Some(request) = usermodel.get_request() {
+                    // XXX From the request information, fetch the right guard
+                    let guard: Option<&Mixnode> = None;
+                    let user = usermodel.get_userid();
+                    for message_timing in request.filter(|t| t < &usermodel.get_limit()) {
+                        let path = self.sample_path(message_timing, &mut rng, guard);
+                        let strdate = Runable::format_message_timing(message_timing);
+                        // write out the path for this message_timing
+                        let is_malicious = self.is_path_malicious(path.as_slice());
+                        self.log_stdout(user, &strdate, path, is_malicious);
+                    }
+                }
+            })
     }
 }
 

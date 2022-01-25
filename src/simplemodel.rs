@@ -6,7 +6,7 @@ use crate::mixnodes::mixnode::Mixnode;
  * at a time.
  */
 use crate::usermodel::{AnonModelKind, UserModel, UserModelInfo};
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::Receiver;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
@@ -30,7 +30,6 @@ pub struct SimpleSynchronousModel<'a, T> {
 impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
     fn new(tot_users: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         // initialize the client with guards
-
         let rng = SmallRng::from_entropy();
         SimpleSynchronousModel {
             rng,
@@ -39,6 +38,10 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
             limit: 0,
             uinfo,
         }
+    }
+
+    fn get_userid(&self) -> u32 {
+        self.uinfo.get_userid()
     }
     /// We simply increase the current time with the sampled value
     fn get_next_message_timing(&mut self) -> u64 {
@@ -54,6 +57,10 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
         self.limit = limit;
     }
 
+    fn get_limit(&self) -> u64 {
+        self.limit
+    }
+
     fn model_kind(&self) -> AnonModelKind {
         AnonModelKind::ClientOnly
     }
@@ -61,8 +68,6 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
     fn with_receiver(&mut self, _r: Receiver<T>) -> &mut Self {
         self
     }
-    /// does not use channels
-    fn add_sender(&mut self, user: u32, s: Sender<T>) {}
 
     ///// Update any client information (e.g., guards), relative to the current timing
     fn update(&mut self, message_timing: u64) {

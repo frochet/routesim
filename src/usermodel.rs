@@ -4,9 +4,7 @@
 use crate::config::TopologyConfig;
 use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, GUARDS_SAMPLE_SIZE_EXTEND};
 use crate::mixnodes::mixnode::Mixnode;
-use crate::userasyncmodel::UserRequest;
-use crossbeam_channel::unbounded;
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
 
@@ -20,11 +18,15 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
     /// Sample the next message timing for this
     /// user model
     fn get_current_time(&self) -> u64;
+    fn get_userid(&self) -> u32;
     fn set_limit(&mut self, limit: u64);
+    fn get_limit(&self) -> u64;
     fn get_next_message_timing(&mut self) -> u64;
+    fn get_request(&self) -> Option<T> { None }
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
-    fn add_sender(&mut self, user: u32, s: Sender<T>);
+    fn add_sender(&mut self, _user: u32, _s: Sender<T>) {}
+    fn drop_senders(&mut self) {}
 
     ///// update the client according to the current timing and the network
     ///// topology
@@ -107,8 +109,27 @@ impl<'a, T> UserModelInfo<'a, T> {
         self
     }
 
+    pub fn get_request(&self) -> Option<T> {
+        if let Some(recv) = &self.receiver {
+            match recv.try_recv() {
+                Ok(req) => Some(req),
+                Err(TryRecvError::Empty) => None,
+                Err(e) => {
+                    panic!("We received an error that shouldn't happen: {}", e);
+                }
+            }
+        }
+        else {
+            None
+        }
+    }
+
     pub fn add_sender(&mut self, user: u32, sender: Sender<T>) {
         self.senders.insert(user, sender);
+    }
+
+    pub fn drop_senders(&mut self) {
+        drop(&self.senders)
     }
 
     pub fn send_request(&self, req: T) -> Result<(), crossbeam_channel::SendError<T>>
