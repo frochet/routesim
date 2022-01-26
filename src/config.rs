@@ -7,6 +7,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 use std::vec::IntoIter;
+use array_init::array_init;
 
 pub const PATH_LENGTH: i8 = 3;
 #[allow(dead_code)]
@@ -35,7 +36,7 @@ pub struct TopologyConfig {
 impl TopologyConfig {
     pub fn new() -> Self {
         TopologyConfig {
-            wc_layers: [Box::new(None), Box::new(None), Box::new(None)],
+            wc_layers: array_init(|_| Box::new(None)),
             ..Default::default()
         }
     }
@@ -120,9 +121,9 @@ where
             println!("Something went wrong while reading");
         }
     }
-    for i in 0..3 {
-        config.wc_layers[i] = Box::new(Some(
-            WeightedIndex::new(config.layers[i].iter().map(|item| item.weight)).unwrap(),
+    for i in 0..PATH_LENGTH {
+        config.wc_layers[i as usize] = Box::new(Some(
+            WeightedIndex::new(config.layers[i as usize].iter().map(|item| item.weight)).unwrap(),
         ));
     }
     config

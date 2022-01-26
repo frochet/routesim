@@ -11,6 +11,7 @@ rand = {version = "0.8.4", features=["small_rng"]}
 clap = "3.0.0-beta.4"
 rustc-hash = "1.0"
 crossbeam-channel = "0.5.2"
+array-init = "2.0.0"
 
 [profile.release]
 lto = true
