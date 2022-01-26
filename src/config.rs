@@ -1,4 +1,6 @@
+use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
+use array_init::array_init;
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
@@ -7,7 +9,6 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 use std::vec::IntoIter;
-use array_init::array_init;
 
 pub const PATH_LENGTH: i8 = 3;
 #[allow(dead_code)]
@@ -31,6 +32,8 @@ pub struct TopologyConfig {
     /// This topology is valid until valid_until's value.
     #[allow(dead_code)]
     valid_until: u64,
+    /// We assume mailboxes are public information for user ids
+    mailboxes: HashMap<u32, MailBox>,
 }
 
 impl TopologyConfig {
@@ -39,6 +42,14 @@ impl TopologyConfig {
             wc_layers: array_init(|_| Box::new(None)),
             ..Default::default()
         }
+    }
+
+    pub fn with_mailboxes(&mut self, tot_users: u32) -> &mut Self {
+        (0..tot_users).for_each(|user| {
+            self.mailboxes
+                .insert(user, MailBox::new(&self.layers[0..1]));
+        });
+        self
     }
 
     #[allow(dead_code)]
@@ -92,7 +103,7 @@ impl TopologyConfig {
 ///
 /// Each line must be
 /// mixid [integer], weight [float], is_malicious [bool], layer [-1..2]
-pub fn load<P>(filename: P) -> TopologyConfig
+pub fn load<P>(filename: P, tot_users: u32) -> TopologyConfig
 where
     P: AsRef<Path>,
 {
@@ -126,12 +137,13 @@ where
             WeightedIndex::new(config.layers[i as usize].iter().map(|item| item.weight)).unwrap(),
         ));
     }
+    config.with_mailboxes(tot_users);
     config
 }
 
 #[test]
 fn load_test_topology_config() {
-    let config = load("testfiles/1000_137_Random_BP_layout.csv");
+    let config = load("testfiles/1000_137_Random_BP_layout.csv", 1);
     let mix = &config.layers()[0][42];
     //42│20.430784458454426│False│0
     assert_eq!(mix.is_malicious, false);
@@ -139,7 +151,7 @@ fn load_test_topology_config() {
 }
 #[test]
 fn test_sample_path() {
-    let config = load("testfiles/1000_137_Random_BP_layout.csv");
+    let config = load("testfiles/1000_137_Random_BP_layout.csv", 10);
     let mut rng = thread_rng();
     let path = config.sample_path(&mut rng, None);
     let path = path.collect::<Vec<_>>();

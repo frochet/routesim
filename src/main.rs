@@ -1,4 +1,5 @@
 mod config;
+mod mailbox;
 mod mixnodes;
 mod routesim;
 mod simplemodel;
@@ -52,7 +53,7 @@ struct Opts {
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let netconf = config::load(opts.filename);
+    let netconf = config::load(opts.filename, opts.users);
 
     let mut topologies = vec![];
     topologies.push(netconf);
