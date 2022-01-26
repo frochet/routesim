@@ -28,7 +28,7 @@ pub struct SimpleSynchronousModel<'a, T> {
 /// This simple model uniformly samples a new message to send in the next [300 ... 900] second
 /// interval
 impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
-    fn new(tot_users: u32, uinfo: UserModelInfo<'a, T>) -> Self {
+    fn new(_tot_users: u32, _epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         // initialize the client with guards
         let rng = SmallRng::from_entropy();
         SimpleSynchronousModel {
@@ -38,6 +38,10 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
             limit: 0,
             uinfo,
         }
+    }
+
+    fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode> {
+        self.uinfo.get_guard_for(topo_idx)
     }
 
     fn get_userid(&self) -> u32 {
@@ -68,7 +72,6 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
     fn with_receiver(&mut self, _r: Receiver<T>) -> &mut Self {
         self
     }
-
     ///// Update any client information (e.g., guards), relative to the current timing
     fn update(&mut self, message_timing: u64) {
         self.uinfo.update(message_timing, &mut self.rng);

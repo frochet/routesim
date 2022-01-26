@@ -13,16 +13,18 @@ pub enum AnonModelKind {
     ClientOnly,
     BothPeers,
 }
+
 pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
-    fn new(tot_users: u32, uinfo: UserModelInfo<'a, T>) -> Self;
+    fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
     /// user model
     fn get_current_time(&self) -> u64;
+    fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode>;
     fn get_userid(&self) -> u32;
-    fn set_limit(&mut self, limit: u64);
     fn get_limit(&self) -> u64;
     fn get_next_message_timing(&mut self) -> u64;
     fn get_request(&self) -> Option<T> { None }
+    fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
     fn add_sender(&mut self, _user: u32, _s: Sender<T>) {}
@@ -44,13 +46,15 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     type RequestTime;
     type RequestSize;
 
-    fn new(request_time: u64, request_size: usize, peers: (u32, u32)) -> Self;
+    fn new(request_time: u64, request_size: usize, peers: (u32, u32), topo_idx: u16) -> Self;
 
     fn get_peers(&self) -> (u32, u32);
 
     fn get_request_size(&self) -> Self::RequestSize;
 
     fn get_request_time(&self) -> Self::RequestTime;
+
+    fn get_topos_idx(&self) -> u16;
 
     fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
@@ -107,6 +111,25 @@ impl<'a, T> UserModelInfo<'a, T> {
     pub fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self {
         self.receiver = Some(r);
         self
+    }
+    
+    #[inline]
+    pub fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode> {
+        match self.guards.as_ref() {
+            Some(v_guards) => {
+                match v_guards.iter()
+                    .skip_while(|guard| !self.is_guard_online(topo_idx, guard.mixid))
+                    .take(1)
+                    .next() {
+                        Some(guard) => Some(*guard),
+                        None => {
+                            // No guard online
+                            None
+                        }
+                    }
+            },
+            None => None,
+        }
     }
 
     pub fn get_request(&self) -> Option<T> {

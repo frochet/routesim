@@ -116,6 +116,7 @@ impl Runable {
             .map(|user| {
                 T::new(
                     self.users,
+                    self.epoch,
                     UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
                 )
             })
@@ -134,6 +135,7 @@ impl Runable {
             .map(|user| {
                 T::new(
                     self.users,
+                    self.epoch,
                     UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
                 )
             })
@@ -193,7 +195,7 @@ impl Runable {
                 //XXX should we parallel iter on the channel recv()?
                 while let Some(request) = usermodel.get_request() {
                     // XXX From the request information, fetch the right guard
-                    let guard: Option<&Mixnode> = None;
+                    let guard: Option<&'a Mixnode> = usermodel.get_guard_for(request.get_topos_idx() as usize);
                     let user = usermodel.get_userid();
                     for message_timing in request.filter(|t| t < &usermodel.get_limit()) {
                         let path = self.sample_path(message_timing, &mut rng, guard);

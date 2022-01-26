@@ -31,7 +31,6 @@ struct Opts {
     usermod: String,
     #[clap(long, default_value = "5000", about = "Number of users to simulate")]
     users: u32,
-
     #[clap(
         short,
         long,
