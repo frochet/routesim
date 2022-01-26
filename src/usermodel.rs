@@ -23,7 +23,9 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
     fn get_userid(&self) -> u32;
     fn get_limit(&self) -> u64;
     fn get_next_message_timing(&mut self) -> u64;
-    fn get_request(&self) -> Option<T> { None }
+    fn get_request(&self) -> Option<T> {
+        None
+    }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
@@ -112,22 +114,24 @@ impl<'a, T> UserModelInfo<'a, T> {
         self.receiver = Some(r);
         self
     }
-    
+
     #[inline]
     pub fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode> {
         match self.guards.as_ref() {
             Some(v_guards) => {
-                match v_guards.iter()
+                match v_guards
+                    .iter()
                     .skip_while(|guard| !self.is_guard_online(topo_idx, guard.mixid))
                     .take(1)
-                    .next() {
-                        Some(guard) => Some(*guard),
-                        None => {
-                            // No guard online
-                            None
-                        }
+                    .next()
+                {
+                    Some(guard) => Some(*guard),
+                    None => {
+                        // No guard online
+                        None
                     }
-            },
+                }
+            }
             None => None,
         }
     }
@@ -141,8 +145,7 @@ impl<'a, T> UserModelInfo<'a, T> {
                     panic!("We received an error that shouldn't happen: {}", e);
                 }
             }
-        }
-        else {
+        } else {
             None
         }
     }

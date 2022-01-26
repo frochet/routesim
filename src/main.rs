@@ -78,7 +78,7 @@ fn main() {
         "simple" => {
             let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
-        },
+        }
         "email" => {
             let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
             runner.run(usermodels);

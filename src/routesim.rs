@@ -161,7 +161,7 @@ impl Runable {
     pub fn run<'a, T, U>(&'a self, mut usermodels: Vec<T>)
     where
         T: UserModel<'a, U> + Send,
-        U: UserRequestIterator
+        U: UserRequestIterator,
     {
         // for_each should block until they all completed
         (0..self.users)
@@ -180,7 +180,7 @@ impl Runable {
                     let is_malicious = self.is_path_malicious(path.as_slice());
                     self.log_stdout(user, &strdate, path, is_malicious);
                 }
-                // Drop the senders -- i.e., the receiver should not block when 
+                // Drop the senders -- i.e., the receiver should not block when
                 // all messages are read
                 if let AnonModelKind::BothPeers = usermodel.model_kind() {
                     usermodel.drop_senders();
@@ -195,7 +195,8 @@ impl Runable {
                 //XXX should we parallel iter on the channel recv()?
                 while let Some(request) = usermodel.get_request() {
                     // XXX From the request information, fetch the right guard
-                    let guard: Option<&'a Mixnode> = usermodel.get_guard_for(request.get_topos_idx() as usize);
+                    let guard: Option<&'a Mixnode> =
+                        usermodel.get_guard_for(request.get_topos_idx() as usize);
                     let user = usermodel.get_userid();
                     for message_timing in request.filter(|t| t < &usermodel.get_limit()) {
                         let path = self.sample_path(message_timing, &mut rng, guard);
