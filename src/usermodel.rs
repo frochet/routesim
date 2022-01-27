@@ -2,8 +2,8 @@
 * Simple trait definition for any concrete user model
 */
 use crate::config::TopologyConfig;
-use crate::mailbox::MailBox;
 use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, GUARDS_SAMPLE_SIZE_EXTEND};
+use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use rand::prelude::*;
@@ -15,7 +15,9 @@ pub enum AnonModelKind {
     BothPeers,
 }
 
-pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>)> {
+pub trait UserModel<'a, T>:
+    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>)>
+{
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
     /// user model
@@ -27,7 +29,9 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'
     fn get_request(&self) -> Option<T> {
         None
     }
-    fn get_mailbox(&self, topo_idx: usize) -> Option<&'a MailBox> { None }
+    fn get_mailbox(&self, topo_idx: usize) -> Option<&'a MailBox> {
+        None
+    }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;

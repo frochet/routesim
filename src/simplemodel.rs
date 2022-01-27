@@ -1,3 +1,4 @@
+use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 /**
  * A simple user model -- It samples messages within a [5, 15min] interval
@@ -7,7 +8,6 @@ use crate::mixnodes::mixnode::Mixnode;
  */
 use crate::usermodel::{AnonModelKind, UserModel, UserModelInfo};
 use crossbeam_channel::Receiver;
-use crate::mailbox::MailBox;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;

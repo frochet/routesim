@@ -1,7 +1,7 @@
 use crate::config::TopologyConfig;
 use crate::config::PATH_LENGTH;
-use crate::mixnodes::mixnode::Mixnode;
 use crate::mailbox::MailBox;
+use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
 use rand::prelude::*;
@@ -73,8 +73,7 @@ impl Runable {
                 mal_mix += 1
             }
             mal_mix == PATH_LENGTH + 1
-        }
-        else {
+        } else {
             mal_mix == PATH_LENGTH
         }
     }
@@ -101,9 +100,18 @@ impl Runable {
     }
 
     #[inline]
-    fn log_stdout(&self, user: u32, strdate: &str, path: IntoIter<&Mixnode>, is_malicious: bool, mailbox: Option<&MailBox>) {
-        let mut log: String = format!("{strdate} {user} {}",
-                                  path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","));
+    fn log_stdout(
+        &self,
+        user: u32,
+        strdate: &str,
+        path: IntoIter<&Mixnode>,
+        is_malicious: bool,
+        mailbox: Option<&MailBox>,
+    ) {
+        let mut log: String = format!(
+            "{strdate} {user} {}",
+            path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
+        );
         if let Some(mailbox) = mailbox {
             let mixid = mailbox.mixid;
             log.push_str(&format!("{mixid}"));

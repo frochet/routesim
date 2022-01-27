@@ -53,7 +53,7 @@ impl TopologyConfig {
     }
 
     pub fn get_mailbox(&self, userid: u32) -> &MailBox {
-        match  &self.mailboxes.get(&userid) {
+        match &self.mailboxes.get(&userid) {
             Some(mailbox) => mailbox,
             None => panic!("BUG: did not find the mailbox of user {}", userid),
         }
