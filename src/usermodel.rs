@@ -2,6 +2,7 @@
 * Simple trait definition for any concrete user model
 */
 use crate::config::TopologyConfig;
+use crate::mailbox::MailBox;
 use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, GUARDS_SAMPLE_SIZE_EXTEND};
 use crate::mixnodes::mixnode::Mixnode;
 use crossbeam_channel::{Receiver, Sender, TryRecvError};
@@ -14,7 +15,7 @@ pub enum AnonModelKind {
     BothPeers,
 }
 
-pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
+pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>)> {
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
     /// user model
@@ -26,6 +27,7 @@ pub trait UserModel<'a, T>: Iterator<Item = (u64, Option<&'a Mixnode>)> {
     fn get_request(&self) -> Option<T> {
         None
     }
+    fn get_mailbox(&self, topo_idx: usize) -> Option<&'a MailBox> { None }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
@@ -61,7 +63,12 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
 
-// potentially common to any user model
+// XXX &Mixnode or mixid? in this case it is ok to hold &Mixnode reference to a vec within the
+// config. Past the initialization, we will never change the config, and it would appear immutable
+// everywhere, making usage of a reference to such a vector safe.  However, is that still a good
+// pattern? We could simply record the mixid instead of the reference -- that would however cost a
+// lookup to retrieve the &Mixnode when we need it.
+
 pub struct UserModelInfo<'a, T> {
     #[allow(dead_code)]
     userid: u32,
@@ -103,6 +110,13 @@ impl<'a, T> UserModelInfo<'a, T> {
             receiver: None,
             epoch,
             curr_idx: 0,
+        }
+    }
+
+    pub fn get_mailbox(&self, topo_idx: usize) -> &'a MailBox {
+        match self.topos.get(topo_idx) {
+            Some(topo) => topo.get_mailbox(self.userid),
+            None => panic!("BUG: No configs at idx {}", topo_idx),
         }
     }
 

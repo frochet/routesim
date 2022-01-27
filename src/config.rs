@@ -52,6 +52,13 @@ impl TopologyConfig {
         self
     }
 
+    pub fn get_mailbox(&self, userid: u32) -> &MailBox {
+        match  &self.mailboxes.get(&userid) {
+            Some(mailbox) => mailbox,
+            None => panic!("BUG: did not find the mailbox of user {}", userid),
+        }
+    }
+
     #[allow(dead_code)]
     pub fn layers(&self) -> &[Vec<Mixnode>] {
         &self.layers

@@ -1,6 +1,7 @@
 use crate::config::TopologyConfig;
 use crate::config::PATH_LENGTH;
 use crate::mixnodes::mixnode::Mixnode;
+use crate::mailbox::MailBox;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
 use rand::prelude::*;
@@ -60,14 +61,22 @@ impl Runable {
 
     /// Check whether the three mixnode in path are compromised.
     /// return true if they are, false otherwise.
-    pub fn is_path_malicious(&self, path: &[&Mixnode]) -> bool {
+    pub fn is_path_malicious(&self, path: &[&Mixnode], mailbox: Option<&MailBox>) -> bool {
         let mut mal_mix = 0;
         for i in 0..PATH_LENGTH {
             if path[i as usize].is_malicious {
                 mal_mix += 1;
             }
         }
-        mal_mix == PATH_LENGTH
+        if let Some(extendedhop) = mailbox {
+            if extendedhop.is_malicious {
+                mal_mix += 1
+            }
+            mal_mix == PATH_LENGTH + 1
+        }
+        else {
+            mal_mix == PATH_LENGTH
+        }
     }
 
     fn format_message_timing(timing: u64) -> String {
@@ -92,19 +101,20 @@ impl Runable {
     }
 
     #[inline]
-    fn log_stdout(&self, user: u32, strdate: &str, path: IntoIter<&Mixnode>, is_malicious: bool) {
+    fn log_stdout(&self, user: u32, strdate: &str, path: IntoIter<&Mixnode>, is_malicious: bool, mailbox: Option<&MailBox>) {
+        let mut log: String = format!("{strdate} {user} {}",
+                                  path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","));
+        if let Some(mailbox) = mailbox {
+            let mixid = mailbox.mixid;
+            log.push_str(&format!("{mixid}"));
+        }
+        log.push_str(&format!(" {is_malicious};"));
         if self.to_console {
-            println!(
-                "{strdate} {user} {} {is_malicious};",
-                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
-            );
+            println!("{log}");
         } else {
             // does not flush for each path (i.e., println should be one system call per call. This
             // should not).
-            print!(
-                "{strdate} {user} {} {is_malicious};",
-                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ","),
-            );
+            print!("{log}");
         }
     }
 
@@ -172,13 +182,13 @@ impl Runable {
                 // move this in the init part?
                 usermodel.set_limit(self.days_to_timestamp());
                 //let userinfo = &mut userinfos[user as usize];
-                for (message_timing, guard) in &mut usermodel {
+                for (message_timing, guard, mailbox) in &mut usermodel {
                     // do we need to update userinfo relative to the current timing?
                     let path = self.sample_path(message_timing, &mut rng, guard);
                     let strdate = Runable::format_message_timing(message_timing);
                     // write out the path for this message_timing
-                    let is_malicious = self.is_path_malicious(path.as_slice());
-                    self.log_stdout(user, &strdate, path, is_malicious);
+                    let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
+                    self.log_stdout(user, &strdate, path, is_malicious, mailbox);
                 }
                 // Drop the senders -- i.e., the receiver should not block when
                 // all messages are read
@@ -197,13 +207,14 @@ impl Runable {
                     // XXX From the request information, fetch the right guard
                     let guard: Option<&'a Mixnode> =
                         usermodel.get_guard_for(request.get_topos_idx() as usize);
+                    let mailbox = usermodel.get_mailbox(request.get_topos_idx() as usize);
                     let user = usermodel.get_userid();
                     for message_timing in request.filter(|t| t < &usermodel.get_limit()) {
                         let path = self.sample_path(message_timing, &mut rng, guard);
                         let strdate = Runable::format_message_timing(message_timing);
                         // write out the path for this message_timing
-                        let is_malicious = self.is_path_malicious(path.as_slice());
-                        self.log_stdout(user, &strdate, path, is_malicious);
+                        let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
+                        self.log_stdout(user, &strdate, path, is_malicious, mailbox);
                     }
                 }
             })

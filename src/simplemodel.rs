@@ -7,6 +7,7 @@ use crate::mixnodes::mixnode::Mixnode;
  */
 use crate::usermodel::{AnonModelKind, UserModel, UserModelInfo};
 use crossbeam_channel::Receiver;
+use crate::mailbox::MailBox;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
@@ -80,7 +81,7 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
 
 impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
     // "%days, %hh,%mm,%ss
-    type Item = (u64, Option<&'a Mixnode>);
+    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>);
 
     fn next(&mut self) -> Option<Self::Item> {
         // update user information
@@ -89,7 +90,7 @@ impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
         match next_timing {
             currt if currt < self.limit => {
                 self.update(currt);
-                Some((currt, self.uinfo.get_selected_guard()))
+                Some((currt, self.uinfo.get_selected_guard(), None))
             }
             _ => None,
         }
