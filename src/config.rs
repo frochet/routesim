@@ -1,7 +1,7 @@
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use array_init::array_init;
-use rand::distributions::WeightedIndex;
+use rand_distr::weighted_alias::WeightedAliasIndex;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
 use std::fs::File;
@@ -27,7 +27,7 @@ pub const GUARDS_LAYER: usize = 1;
 pub struct TopologyConfig {
     /// The path length
     layers: [Vec<Mixnode>; PATH_LENGTH as usize],
-    wc_layers: [Box<Option<WeightedIndex<f64>>>; PATH_LENGTH as usize],
+    wc_layers: [Box<Option<WeightedAliasIndex<f64>>>; PATH_LENGTH as usize],
     unselected: HashMap<u32, Mixnode>,
     /// This topology is valid until valid_until's value.
     #[allow(dead_code)]
@@ -141,7 +141,7 @@ where
     }
     for i in 0..PATH_LENGTH {
         config.wc_layers[i as usize] = Box::new(Some(
-            WeightedIndex::new(config.layers[i as usize].iter().map(|item| item.weight)).unwrap(),
+            WeightedAliasIndex::new(config.layers[i as usize].iter().map(|item| item.weight).collect()).unwrap(),
         ));
     }
     config.with_mailboxes(tot_users);
