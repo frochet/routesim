@@ -1,11 +1,11 @@
 mod config;
+mod histogram;
 mod mailbox;
 mod mixnodes;
 mod routesim;
 mod simplemodel;
 mod userasyncmodel;
 mod usermodel;
-mod histogram;
 
 use clap::{AppSettings, Clap};
 use routesim::Runable;

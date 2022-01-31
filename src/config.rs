@@ -1,8 +1,8 @@
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use array_init::array_init;
-use rand_distr::weighted_alias::WeightedAliasIndex;
 use rand::prelude::*;
+use rand_distr::weighted_alias::WeightedAliasIndex;
 use rustc_hash::FxHashMap as HashMap;
 use std::fs::File;
 use std::io::BufRead;
@@ -141,7 +141,13 @@ where
     }
     for i in 0..PATH_LENGTH {
         config.wc_layers[i as usize] = Box::new(Some(
-            WeightedAliasIndex::new(config.layers[i as usize].iter().map(|item| item.weight).collect()).unwrap(),
+            WeightedAliasIndex::new(
+                config.layers[i as usize]
+                    .iter()
+                    .map(|item| item.weight)
+                    .collect(),
+            )
+            .unwrap(),
         ));
     }
     config.with_mailboxes(tot_users);
