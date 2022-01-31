@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serde_json::Result;
 use rand::prelude::*;
+use rand_distr::WeightedAliasIndex;
 
 
 #[derive(Deserialize)]
@@ -26,12 +27,10 @@ impl Histogram {
     /// nbr_sampling should also be described within the json data
     /// {
     ///     "nbr_sampling": int,
+    ///     "bin_size": int,
     ///     "data": list,
     /// }
-    /// data should be a list of (counts, timestamps).
-    /// E.g., in the email case, the bin value should be a value every
-    /// hour up to 1 week in timestamp (7*24 timestamp), with a width of 60*60.
-    /// period will be derived from the last bin value
+    /// data should be a list of timestamps.
     pub fn from_json(json_data: &str) -> Result<Histogram> {
 
         let mut jdata: HistData =  serde_json::from_str(json_data)?;
@@ -87,10 +86,13 @@ impl Histogram {
 
     pub fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> usize {
         let idx = self.wi.sample(rng);
-        match self.timestamps.get(idx) {
-            Some(elem) => *elem,
-            None=> panic!("Wrong idx: {}", idx),
+        unsafe {
+            *self.timestamps.get_unchecked(idx)
         }
+        //match self.timestamps.get(idx) {
+            //Some(elem) => *elem,
+            //None=> panic!("Wrong idx: {}", idx),
+        //}
     }
 }
 
