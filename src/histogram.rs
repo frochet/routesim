@@ -93,6 +93,7 @@ impl Histogram {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

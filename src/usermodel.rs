@@ -3,6 +3,7 @@
 */
 use crate::config::TopologyConfig;
 use crate::config::{GUARDS_LAYER, GUARDS_SAMPLE_SIZE, GUARDS_SAMPLE_SIZE_EXTEND};
+use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crossbeam_channel::{Receiver, Sender, TryRecvError};
@@ -29,12 +30,18 @@ pub trait UserModel<'a, T>:
     fn get_request(&self) -> Option<T> {
         None
     }
-    fn get_mailbox(&self, topo_idx: usize) -> Option<&'a MailBox> {
+    fn get_mailbox(&self, _topo_idx: usize) -> Option<&'a MailBox> {
         None
     }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
+    fn with_timestamp_sampler(&mut self, _timestamp_sampler: &'a Histogram) -> &mut Self {
+        self
+    }
+    fn with_size_sampler(&mut self, _size_sampler: &'a Histogram) -> &mut Self {
+        self
+    }
     fn add_sender(&mut self, _user: u32, _s: Sender<T>) {}
     fn drop_senders(&mut self) {}
 
