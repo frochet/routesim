@@ -7,6 +7,7 @@ use crossbeam_channel::unbounded;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
+use std::path::Path;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -107,6 +108,7 @@ impl Runable {
         path: IntoIter<&Mixnode>,
         is_malicious: bool,
         mailbox: Option<&MailBox>,
+        requestid: Option<u64>,
     ) {
         let mut log: String = format!(
             "{strdate} {user} {}",
@@ -142,7 +144,7 @@ impl Runable {
         usermodels
     }
 
-    pub fn init<'a, T, U>(&'a self) -> Vec<T>
+    pub fn init<'a, T, U, P: AsRef<Path>>(&'a self, timestamps_h: Option<P>, sizes_h: Option<P>) -> Vec<T>
     where
         T: UserModel<'a, U>,
         U: UserRequestIterator,
@@ -190,13 +192,13 @@ impl Runable {
                 // move this in the init part?
                 usermodel.set_limit(self.days_to_timestamp());
                 //let userinfo = &mut userinfos[user as usize];
-                for (message_timing, guard, mailbox) in &mut usermodel {
+                for (message_timing, guard, mailbox, requestid) in &mut usermodel {
                     // do we need to update userinfo relative to the current timing?
                     let path = self.sample_path(message_timing, &mut rng, guard);
                     let strdate = Runable::format_message_timing(message_timing);
                     // write out the path for this message_timing
                     let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
-                    self.log_stdout(user, &strdate, path, is_malicious, mailbox);
+                    self.log_stdout(user, &strdate, path, is_malicious, mailbox, requestid);
                 }
                 // Drop the senders -- i.e., the receiver should not block when
                 // all messages are read
@@ -218,12 +220,13 @@ impl Runable {
                     // fetch the message over the sendbox
                     let mailbox = usermodel.get_mailbox(request.get_topos_idx() as usize);
                     let user = usermodel.get_userid();
+                    let requestid = request.get_requestid();
                     for message_timing in request.filter(|t| t < &usermodel.get_limit()) {
                         let path = self.sample_path(message_timing, &mut rng, guard);
                         let strdate = Runable::format_message_timing(message_timing);
                         // write out the path for this message_timing
                         let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
-                        self.log_stdout(user, &strdate, path, is_malicious, mailbox);
+                        self.log_stdout(user, &strdate, path, is_malicious, mailbox, Some(requestid));
                     }
                 }
             })

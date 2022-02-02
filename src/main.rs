@@ -19,9 +19,24 @@ struct Opts {
         short,
         long,
         required = true,
+        parse(from_os_str),
         about = "Network config containing mixes"
     )]
-    filename: String,
+    filename: std::path::PathBuf,
+    #[clap(
+        short,
+        long,
+        parse(from_os_str),
+        about = "timestamps data used to build a histogram"
+    )]
+    timestamps_h: Option<std::path::PathBuf>,
+    #[clap(
+        short,
+        long,
+        parse(from_os_str),
+        about = "Message sizes data used to build a histogram"
+    )]
+    sizes_h: Option<std::path::PathBuf>,
     #[clap(long, default_value = "1", about = "Number of simulated days")]
     days: u32,
     #[clap(
@@ -82,7 +97,7 @@ fn main() {
             runner.run(usermodels);
         }
         "email" => {
-            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest, std::path::PathBuf>(opts.timestamps_h, opts.sizes_h);
             runner.run(usermodels);
         }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),

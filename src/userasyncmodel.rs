@@ -151,6 +151,7 @@ where
                 currt,
                 self.uinfo.get_selected_guard(),
                 self.get_mailbox(topo_idx as usize),
+                Some(req.get_requestid()),
             )),
             // we're over the limit
             Some(_) => None,
@@ -166,7 +167,7 @@ impl<'a, T> Iterator for SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone,
 {
-    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>);
+    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_req.is_none() && self.current_time < self.limit {
@@ -182,6 +183,7 @@ where
                         currt,
                         self.uinfo.get_selected_guard(),
                         self.get_mailbox(topo_idx),
+                        Some(self.current_req.as_ref().unwrap().get_requestid()),
                     ))
                 }
                 Some(currt) if currt >= self.limit => None,
@@ -249,6 +251,10 @@ impl UserRequestIterator for UserRequest {
 
     fn get_peers(&self) -> (u32, u32) {
         self.peers
+    }
+
+    fn get_requestid(&self) -> u64 {
+        self.requestid
     }
 
     fn get_request_size(&self) -> Self::RequestSize {

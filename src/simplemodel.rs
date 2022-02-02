@@ -81,7 +81,7 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
 
 impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
     // "%days, %hh,%mm,%ss
-    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>);
+    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
 
     fn next(&mut self) -> Option<Self::Item> {
         // update user information
@@ -90,7 +90,7 @@ impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
         match next_timing {
             currt if currt < self.limit => {
                 self.update(currt);
-                Some((currt, self.uinfo.get_selected_guard(), None))
+                Some((currt, self.uinfo.get_selected_guard(), None, None))
             }
             _ => None,
         }

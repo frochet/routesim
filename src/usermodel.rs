@@ -18,7 +18,7 @@ pub enum AnonModelKind {
 }
 
 pub trait UserModel<'a, T>:
-    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>)>
+    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>)>
 {
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
@@ -71,6 +71,8 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     fn get_request_time(&self) -> Self::RequestTime;
 
     fn get_topos_idx(&self) -> u16;
+    
+    fn get_requestid(&self) -> u64;
 
     fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
