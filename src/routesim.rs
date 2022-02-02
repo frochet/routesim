@@ -215,6 +215,7 @@ impl Runable {
                     // XXX From the request information, fetch the right guard
                     let guard: Option<&'a Mixnode> =
                         usermodel.get_guard_for(request.get_topos_idx() as usize);
+                    // fetch the message over the sendbox
                     let mailbox = usermodel.get_mailbox(request.get_topos_idx() as usize);
                     let user = usermodel.get_userid();
                     for message_timing in request.filter(|t| t < &usermodel.get_limit()) {

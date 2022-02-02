@@ -9,6 +9,7 @@ use crate::mixnodes::mixnode::Mixnode;
 use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
+use std::hash::Hasher;
 
 #[derive(PartialEq)]
 pub enum AnonModelKind {
@@ -61,7 +62,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     type RequestTime;
     type RequestSize;
 
-    fn new(request_time: u64, request_size: usize, peers: (u32, u32), topo_idx: u16) -> Self;
+    fn new<H: Hasher>(state: &mut H, request_time: u64, request_size: usize, peers: (u32, u32), topo_idx: u16) -> Self;
 
     fn get_peers(&self) -> (u32, u32);
 
@@ -126,7 +127,7 @@ impl<'a, T> UserModelInfo<'a, T> {
 
     pub fn get_mailbox(&self, topo_idx: usize) -> &'a MailBox {
         match self.topos.get(topo_idx) {
-            Some(topo) => topo.get_mailbox(self.userid),
+            Some(topo) => topo.get_mailbox(self.userid).unwrap(),
             None => panic!("BUG: No configs at idx {}", topo_idx),
         }
     }
