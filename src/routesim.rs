@@ -144,11 +144,15 @@ impl Runable {
         usermodels
     }
 
-    pub fn init<'a, T, U, P: AsRef<Path>>(&'a self, timestamps_h: Option<P>, sizes_h: Option<P>) -> Vec<T>
+    pub fn init<'a, T, U, P: AsRef<Path>>(&'a self, timestamps_h: P, sizes_h: P) -> Vec<T>
     where
         T: UserModel<'a, U>,
         U: UserRequestIterator,
     {
+        // try to open timstamps_h and sizes_h. Panic if it fails.
+        let mut timestamps_f = std::fs::File::open(&timestamps_h).expect("Couldn't open the file");
+        let mut sizes_f = std::fs::File::open(&sizes_h).expect("Couldn't open the file");
+
         // create first all model info
         // add the mpc channels
         let mut usermodels: Vec<_> = (0..self.users)

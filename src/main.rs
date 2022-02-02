@@ -24,19 +24,19 @@ struct Opts {
     )]
     filename: std::path::PathBuf,
     #[clap(
-        short,
         long,
         parse(from_os_str),
+        default_value = "testfiles/timestamps.json",
         about = "timestamps data used to build a histogram"
     )]
-    timestamps_h: Option<std::path::PathBuf>,
+    timestamps_h: std::path::PathBuf,
     #[clap(
-        short,
         long,
         parse(from_os_str),
+        default_value = "testfiles/sizes.json",
         about = "Message sizes data used to build a histogram"
     )]
-    sizes_h: Option<std::path::PathBuf>,
+    sizes_h: std::path::PathBuf,
     #[clap(long, default_value = "1", about = "Number of simulated days")]
     days: u32,
     #[clap(
