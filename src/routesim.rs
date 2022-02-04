@@ -1,4 +1,5 @@
 use crate::config::TopologyConfig;
+use crate::histogram::Histogram;
 use crate::config::PATH_LENGTH;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
@@ -27,6 +28,10 @@ pub struct Runable {
     epoch: u32,
     /// print to console --- default: false
     to_console: bool,
+    /// Timestamps histogram
+    timestamps_h: Option<Histogram>,
+    /// Sizes histogram
+    sizes_h: Option<Histogram>,
 }
 
 impl Runable {
@@ -47,6 +52,16 @@ impl Runable {
 
     pub fn with_console(&mut self) -> &mut Self {
         self.to_console = true;
+        self
+    }
+
+    pub fn with_timestamps_hist(&mut self, h: Histogram) -> &mut Self {
+        self.timestamps_h = Some(h);
+        self
+    }
+
+    pub fn with_sizes_hist(&mut self, h: Histogram) -> &mut Self {
+        self.sizes_h = Some(h);
         self
     }
 
@@ -144,24 +159,24 @@ impl Runable {
         usermodels
     }
 
-    pub fn init<'a, T, U, P: AsRef<Path>>(&'a self, timestamps_h: P, sizes_h: P) -> Vec<T>
+    pub fn init<'a, T, U>(&'a self) -> Vec<T>
     where
         T: UserModel<'a, U>,
         U: UserRequestIterator,
     {
-        // try to open timstamps_h and sizes_h. Panic if it fails.
-        let mut timestamps_f = std::fs::File::open(&timestamps_h).expect("Couldn't open the file");
-        let mut sizes_f = std::fs::File::open(&sizes_h).expect("Couldn't open the file");
-
         // create first all model info
         // add the mpc channels
         let mut usermodels: Vec<_> = (0..self.users)
             .map(|user| {
-                T::new(
+                let mut model = T::new(
                     self.users,
                     self.epoch,
                     UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
-                )
+                );
+                // add a reference to the histogram for sampling
+                model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
+                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
+                model
             })
             .collect();
         for i in 0..self.users {

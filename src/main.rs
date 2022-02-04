@@ -11,6 +11,7 @@ use clap::{AppSettings, Clap};
 use routesim::Runable;
 use simplemodel::*;
 use userasyncmodel::*;
+use histogram::Histogram;
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -80,7 +81,6 @@ fn main() {
     if !opts.disable_guards {
         runner.with_guards();
     }
-
     if opts.to_console {
         runner.with_console();
     }
@@ -97,7 +97,14 @@ fn main() {
             runner.run(usermodels);
         }
         "email" => {
-            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest, std::path::PathBuf>(opts.timestamps_h, opts.sizes_h);
+            // try to open timstamps_h and sizes_h. Panic if it fails.
+            let timestamps_s = std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
+            let timestamps_h: Histogram = Histogram::from_json(&timestamps_s).expect("Something went wrong while processing the json data");
+            let mut sizes_s = std::fs::read_to_string(&opts.sizes_h).expect("Couldn't open the file");
+            let sizes_h: Histogram = Histogram::from_json(&sizes_s).expect("Something went wrong while processing the json data");
+            runner.with_timestamps_hist(timestamps_h)
+                .with_sizes_hist(sizes_h);
+            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
         }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),
