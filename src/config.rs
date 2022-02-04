@@ -52,7 +52,7 @@ impl TopologyConfig {
         self
     }
 
-    pub fn get_mailbox(&self, userid: u32) -> Option<&MailBox>{
+    pub fn get_mailbox(&self, userid: u32) -> Option<&MailBox> {
         self.mailboxes.get(&userid)
     }
 

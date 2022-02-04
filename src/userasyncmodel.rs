@@ -1,6 +1,5 @@
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
-use rand::distributions::{Distribution, Uniform};
 /**
  * This is expected to contain a generic model for asynchronous message sending and fetching
  *
@@ -9,10 +8,11 @@ use rand::distributions::{Distribution, Uniform};
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::{Receiver, Sender};
+use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
-use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 pub struct SimpleEmailModel<'a, T> {
     tot_users: u32,
@@ -116,7 +116,6 @@ where
                 count -= 1;
             }
         }
-
     }
     #[inline]
     fn get_limit(&self) -> u64 {
@@ -152,7 +151,7 @@ where
         let topo_idx: u16 = (self.current_time / self.epoch as u64) as u16;
         let mut req = T::new(
             &mut self.hasher,
-            self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64, 
+            self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64,
             self.size_sampler.unwrap().sample(&mut self.rng),
             (
                 self.uinfo.get_userid(),
@@ -244,7 +243,7 @@ pub struct UserRequest {
 }
 
 impl Hash for UserRequest {
-    fn hash<H: Hasher>(&self, state: &mut H)  {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.request_time.hash(state);
         self.request_size.hash(state);
         self.peers.hash(state);
@@ -255,7 +254,13 @@ impl UserRequestIterator for UserRequest {
     type RequestTime = u64;
     type RequestSize = usize;
 
-    fn new<H: Hasher>(state: &mut H, request_time: u64, request_size: usize, peers: (u32, u32), topos_idx: u16) -> Self {
+    fn new<H: Hasher>(
+        state: &mut H,
+        request_time: u64,
+        request_size: usize,
+        peers: (u32, u32),
+        topos_idx: u16,
+    ) -> Self {
         let mut r = UserRequest {
             request_time,
             request_size,

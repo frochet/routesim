@@ -8,10 +8,10 @@ mod userasyncmodel;
 mod usermodel;
 
 use clap::{AppSettings, Clap};
+use histogram::Histogram;
 use routesim::Runable;
 use simplemodel::*;
 use userasyncmodel::*;
-use histogram::Histogram;
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -103,11 +103,15 @@ fn main() {
         }
         "email" => {
             // try to open timstamps_h and sizes_h. Panic if it fails.
-            let timestamps_s = std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
-            let timestamps_h: Histogram = Histogram::from_json(&timestamps_s).expect("Something went wrong while processing the json data");
+            let timestamps_s =
+                std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
+            let timestamps_h: Histogram = Histogram::from_json(&timestamps_s)
+                .expect("Something went wrong while processing the json data");
             let sizes_s = std::fs::read_to_string(&opts.sizes_h).expect("Couldn't open the file");
-            let sizes_h: Histogram = Histogram::from_json(&sizes_s).expect("Something went wrong while processing the json data");
-            runner.with_timestamps_hist(timestamps_h)
+            let sizes_h: Histogram = Histogram::from_json(&sizes_s)
+                .expect("Something went wrong while processing the json data");
+            runner
+                .with_timestamps_hist(timestamps_h)
                 .with_sizes_hist(sizes_h);
             let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
             runner.run(usermodels);

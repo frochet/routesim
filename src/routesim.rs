@@ -1,14 +1,14 @@
 use crate::config::TopologyConfig;
-use crate::histogram::Histogram;
 use crate::config::PATH_LENGTH;
+use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
 use rand::prelude::*;
 use rayon::prelude::*;
-use std::vec::IntoIter;
 use std::path::Path;
+use std::vec::IntoIter;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -37,7 +37,13 @@ pub struct Runable {
 }
 
 impl Runable {
-    pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32, contacts: u32) -> Self {
+    pub fn new(
+        users: u32,
+        configs: Vec<TopologyConfig>,
+        days: u32,
+        epoch: u32,
+        contacts: u32,
+    ) -> Self {
         Runable {
             configs,
             users,
@@ -178,7 +184,7 @@ impl Runable {
                 );
                 // add a reference to the histogram for sampling
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
-                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());   
+                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                 model.set_contacts(self.contacts);
                 model
             })
@@ -249,7 +255,14 @@ impl Runable {
                         let strdate = Runable::format_message_timing(message_timing);
                         // write out the path for this message_timing
                         let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
-                        self.log_stdout(user, &strdate, path, is_malicious, mailbox, Some(requestid));
+                        self.log_stdout(
+                            user,
+                            &strdate,
+                            path,
+                            is_malicious,
+                            mailbox,
+                            Some(requestid),
+                        );
                     }
                 }
             })

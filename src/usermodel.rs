@@ -63,7 +63,13 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     type RequestTime;
     type RequestSize;
 
-    fn new<H: Hasher>(state: &mut H, request_time: u64, request_size: usize, peers: (u32, u32), topo_idx: u16) -> Self;
+    fn new<H: Hasher>(
+        state: &mut H,
+        request_time: u64,
+        request_size: usize,
+        peers: (u32, u32),
+        topo_idx: u16,
+    ) -> Self;
 
     fn get_peers(&self) -> (u32, u32);
 
@@ -72,7 +78,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     fn get_request_time(&self) -> Self::RequestTime;
 
     fn get_topos_idx(&self) -> u16;
-    
+
     fn get_requestid(&self) -> u64;
 
     fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
