@@ -34,6 +34,7 @@ pub trait UserModel<'a, T>:
     fn get_mailbox(&self, _topo_idx: usize) -> Option<&'a MailBox> {
         None
     }
+    fn set_contacts(&mut self, _contacts: u32) {}
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
@@ -99,6 +100,9 @@ pub struct UserModelInfo<'a, T> {
     receiver: Option<Receiver<T>>,
     /// epoch length in seconds
     epoch: u32,
+    /// contacts,
+    pub contacts_list: Vec<u32>,
+
     curr_idx: usize,
 }
 
@@ -123,6 +127,7 @@ impl<'a, T> UserModelInfo<'a, T> {
             senders: HashMap::default(),
             receiver: None,
             epoch,
+            contacts_list: Vec::new(),
             curr_idx: 0,
         }
     }

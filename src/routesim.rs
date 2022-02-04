@@ -32,15 +32,18 @@ pub struct Runable {
     timestamps_h: Option<Histogram>,
     /// Sizes histogram
     sizes_h: Option<Histogram>,
+    /// The number of contact each sample has
+    contacts: u32,
 }
 
 impl Runable {
-    pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32) -> Self {
+    pub fn new(users: u32, configs: Vec<TopologyConfig>, days: u32, epoch: u32, contacts: u32) -> Self {
         Runable {
             configs,
             users,
             days,
             epoch,
+            contacts,
             ..Default::default()
         }
     }
@@ -175,7 +178,8 @@ impl Runable {
                 );
                 // add a reference to the histogram for sampling
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
-                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
+                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());   
+                model.set_contacts(self.contacts);
                 model
             })
             .collect();

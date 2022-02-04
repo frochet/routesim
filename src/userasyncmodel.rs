@@ -1,5 +1,6 @@
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
+use rand::distributions::{Distribution, Uniform};
 /**
  * This is expected to contain a generic model for asynchronous message sending and fetching
  *
@@ -26,6 +27,8 @@ pub struct SimpleEmailModel<'a, T> {
 
     size_sampler: Option<&'a Histogram>,
 
+    contact_sampler: Option<Uniform<u32>>,
+
     limit: u64,
 
     epoch: u32,
@@ -49,6 +52,7 @@ where
             uinfo,
             timestamp_sampler: None,
             size_sampler: None,
+            contact_sampler: None,
             limit: 0,
             epoch,
             rng,
@@ -95,9 +99,24 @@ where
         self.current_time
     }
 
-    #[inline]
     fn set_limit(&mut self, limit: u64) {
         self.limit = limit
+    }
+
+    fn set_contacts(&mut self, contacts: u32) {
+        // it is only in the init phase; so we don't care
+        // the cost is duplicated for all samples
+        let die = Uniform::from(0..self.tot_users);
+        self.contact_sampler = Some(Uniform::from(0..contacts));
+        let mut count = contacts;
+        while count != 0 {
+            let peer = die.sample(&mut self.rng);
+            if peer != self.get_userid() && !self.uinfo.contacts_list.contains(&peer) {
+                self.uinfo.contacts_list.push(peer);
+                count -= 1;
+            }
+        }
+
     }
     #[inline]
     fn get_limit(&self) -> u64 {

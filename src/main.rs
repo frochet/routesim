@@ -65,6 +65,8 @@ struct Opts {
     to_console: bool,
     #[clap(short, about = "Do we desable guards?")]
     disable_guards: bool,
+    #[clap(short, about = "The number of contacts", default_value = "10")]
+    contacts: u32,
 }
 
 fn main() {
@@ -76,7 +78,7 @@ fn main() {
     topologies.push(netconf);
     let n = topologies.len();
 
-    let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch);
+    let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch, opts.contacts);
 
     if !opts.disable_guards {
         runner.with_guards();
@@ -84,7 +86,10 @@ fn main() {
     if opts.to_console {
         runner.with_console();
     }
-
+    // we should sample users in a valid range
+    if opts.contacts > opts.users {
+        panic!("The number of contacts cannot be higher than the number of samples (users)");
+    }
     // check whether the parameters days; config and epoch make sense
     // panic otherwise.
     if opts.epoch * n as u32 <= opts.days * 24 * 60 * 60 {
@@ -100,7 +105,7 @@ fn main() {
             // try to open timstamps_h and sizes_h. Panic if it fails.
             let timestamps_s = std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
             let timestamps_h: Histogram = Histogram::from_json(&timestamps_s).expect("Something went wrong while processing the json data");
-            let mut sizes_s = std::fs::read_to_string(&opts.sizes_h).expect("Couldn't open the file");
+            let sizes_s = std::fs::read_to_string(&opts.sizes_h).expect("Couldn't open the file");
             let sizes_h: Histogram = Histogram::from_json(&sizes_s).expect("Something went wrong while processing the json data");
             runner.with_timestamps_hist(timestamps_h)
                 .with_sizes_hist(sizes_h);
