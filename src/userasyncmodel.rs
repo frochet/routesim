@@ -103,10 +103,7 @@ where
         self.limit = limit
     }
 
-    fn set_contacts(&mut self, contacts: u32) {
-        // it is only in the init phase; so we don't care
-        // the cost is duplicated for all samples
-        let die = Uniform::from(0..self.tot_users);
+    fn set_contacts(&mut self, contacts: u32, die: &Uniform<u32>) {
         self.contact_sampler = Some(Uniform::from(0..contacts));
         let mut count = contacts;
         while count != 0 {
@@ -149,14 +146,13 @@ where
 {
     fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a, T> as Iterator>::Item> {
         let topo_idx: u16 = (self.current_time / self.epoch as u64) as u16;
+        let contact: u32 =
+            self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
         let mut req = T::new(
             &mut self.hasher,
             self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64,
             self.size_sampler.unwrap().sample(&mut self.rng),
-            (
-                self.uinfo.get_userid(),
-                (self.uinfo.get_userid() + 1) % self.tot_users,
-            ),
+            (self.uinfo.get_userid(), contact),
             topo_idx,
         );
         match self.uinfo.send_request(req.clone()) {

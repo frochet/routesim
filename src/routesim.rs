@@ -5,9 +5,9 @@ use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
+use rand::distributions::Uniform;
 use rand::prelude::*;
 use rayon::prelude::*;
-use std::path::Path;
 use std::vec::IntoIter;
 
 const DAY: u64 = 60 * 60 * 24;
@@ -175,6 +175,7 @@ impl Runable {
     {
         // create first all model info
         // add the mpc channels
+        let die = Uniform::from(0..self.users);
         let mut usermodels: Vec<_> = (0..self.users)
             .map(|user| {
                 let mut model = T::new(
@@ -185,10 +186,11 @@ impl Runable {
                 // add a reference to the histogram for sampling
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
-                model.set_contacts(self.contacts);
+                model.set_contacts(self.contacts, &die);
                 model
             })
             .collect();
+        // todo parallelize that somehow
         for i in 0..self.users {
             // let's create one receiver per user, and give
             // one sender to every other users

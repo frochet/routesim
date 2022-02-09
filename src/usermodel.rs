@@ -7,6 +7,7 @@ use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crossbeam_channel::{Receiver, Sender, TryRecvError};
+use rand::distributions::Uniform;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
 use std::hash::Hasher;
@@ -34,7 +35,7 @@ pub trait UserModel<'a, T>:
     fn get_mailbox(&self, _topo_idx: usize) -> Option<&'a MailBox> {
         None
     }
-    fn set_contacts(&mut self, _contacts: u32) {}
+    fn set_contacts(&mut self, _contacts: u32, _die: &Uniform<u32>) {}
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
