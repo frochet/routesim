@@ -12,9 +12,9 @@ struct HistData {
 
 pub struct Histogram {
     /// One week by default
-    period: u64,
+    pub period: u64,
     /// The number of sampling we take over the overall period
-    nbr_sampling: u32,
+    pub nbr_sampling: u32,
 
     timestamps: Vec<usize>,
     wi: Box<WeightedAliasIndex<usize>>,

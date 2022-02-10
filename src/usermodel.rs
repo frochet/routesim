@@ -61,7 +61,7 @@ pub trait UserModel<'a, T>:
 /// The iterator should start from the request's timing + some delay, and make sure
 /// it does not go over the limit
 pub trait UserRequestIterator: Iterator<Item = u64> {
-    type RequestTime;
+    type RequestTime: Ord + PartialOrd + Eq + PartialEq;
     type RequestSize;
 
     fn new<H: Hasher>(
@@ -82,7 +82,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
 
     fn get_requestid(&self) -> u64;
 
-    fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64>;
+    fn next_with_bandwidth(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
 
 // XXX &Mixnode or mixid? in this case it is ok to hold &Mixnode reference to a vec within the

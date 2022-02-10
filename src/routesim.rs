@@ -134,10 +134,19 @@ impl Runable {
         mailbox: Option<&MailBox>,
         requestid: Option<u64>,
     ) {
-        let mut log: String = format!(
-            "{strdate} {user} {}",
-            path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
-        );
+        let mut log: String;
+        if let Some(rid) = requestid {
+            log = format!(
+                "{strdate} {user} {rid} {}",
+                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
+            );
+        }
+        else {
+            log = format!(
+                "{strdate} {user} {}",
+                path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
+            );
+        }
         if let Some(mailbox) = mailbox {
             let mixid = mailbox.mixid;
             log.push_str(&format!("{mixid}"));

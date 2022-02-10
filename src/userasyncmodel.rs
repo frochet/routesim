@@ -18,7 +18,9 @@ pub struct SimpleEmailModel<'a, T> {
     tot_users: u32,
 
     current_time: u64,
-
+    /// list of requests for the current period.
+    req_list: Vec<T>,
+    /// request being considered now.
     current_req: Option<T>,
 
     uinfo: UserModelInfo<'a, T>,
@@ -40,7 +42,7 @@ pub struct SimpleEmailModel<'a, T> {
 
 impl<'a, T> UserModel<'a, T> for SimpleEmailModel<'a, T>
 where
-    T: UserRequestIterator + Clone,
+    T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
@@ -49,6 +51,7 @@ where
             tot_users,
             current_time: 0,
             current_req: None,
+            req_list: Vec::new(),
             uinfo,
             timestamp_sampler: None,
             size_sampler: None,
@@ -62,6 +65,7 @@ where
 
     fn with_timestamp_sampler(&mut self, timestamp_sampler: &'a Histogram) -> &mut Self {
         self.timestamp_sampler = Some(timestamp_sampler);
+        self.init_list();
         self
     }
 
@@ -142,15 +146,21 @@ where
 
 impl<'a, T> SimpleEmailModel<'a, T>
 where
-    T: UserRequestIterator + Clone,
+    T: UserRequestIterator + Clone + PartialOrd + Ord + Eq + PartialEq,
 {
-    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a, T> as Iterator>::Item> {
-        let topo_idx: u16 = (self.current_time / self.epoch as u64) as u16;
+    fn build_reqlist(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
-        let mut req = T::new(
+        // req_timestamp is computed from the current period + the sampled value.
+        let req_timestamp = self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64 + self.current_time;
+        // if we select over the simulation limit; we stop.
+        if req_timestamp > self.limit {
+            return None;
+        }
+        let topo_idx: u16 = (req_timestamp / self.epoch as u64) as u16;
+        let req = T::new(
             &mut self.hasher,
-            self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64,
+            req_timestamp,
             self.size_sampler.unwrap().sample(&mut self.rng),
             (self.uinfo.get_userid(), contact),
             topo_idx,
@@ -160,58 +170,64 @@ where
             Err(e) => panic!("Sending a request failed! {}", e),
         };
 
-        let r = match req.next() {
-            Some(currt) if currt < self.limit => Some((
-                currt,
-                self.uinfo.get_selected_guard(),
-                self.get_mailbox(topo_idx as usize),
-                Some(req.get_requestid()),
-            )),
+        Some(req)
+    }
+
+    #[inline]
+    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a,T> as Iterator>::Item> {
+        let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
+        let req = self.current_req.as_mut().unwrap();
+        let reqid = req.get_requestid();
+        match req.next() {
+            Some(timestamp) if timestamp < self.limit => {
+                self.update(timestamp);
+                Some((
+                        timestamp,
+                        self.uinfo.get_selected_guard(),
+                        mailbox,
+                        Some(reqid),
+                ))
+            },
             // we're over the limit
             Some(_) => None,
-            // we should ahead of the time limit
             None => None,
-        };
-        self.current_req = Some(req);
-        r
+        }
     }
+
+    fn init_list(&mut self) {
+        // draw requests from the timestamps distribution
+        for _ in 0..self.timestamp_sampler.unwrap().nbr_sampling {
+            if let Some(req) = self.build_reqlist() {
+                self.req_list.push(req);
+            }
+        }
+        self.req_list.sort_by(|r1, r2| r1.get_request_time().cmp(&r2.get_request_time()));
+        self.current_req = self.req_list.pop();
+        self.current_time += self.timestamp_sampler.unwrap().period;
+    }
+
+
 }
 
 impl<'a, T> Iterator for SimpleEmailModel<'a, T>
 where
-    T: UserRequestIterator + Clone,
+    T: UserRequestIterator + Clone + Eq + Ord + PartialEq + PartialOrd,
 {
     type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_req.is_none() && self.current_time < self.limit {
-            self.current_time = self.get_next_message_timing();
-            self.update(self.current_time);
-            self.fetch_next()
-        } else {
-            match self.current_req.as_mut().unwrap().next() {
-                Some(currt) if currt < self.limit => {
-                    self.update(currt);
-                    let topo_idx = (currt / self.epoch as u64) as usize;
-                    Some((
-                        currt,
-                        self.uinfo.get_selected_guard(),
-                        self.get_mailbox(topo_idx),
-                        Some(self.current_req.as_ref().unwrap().get_requestid()),
-                    ))
+        let next = self.fetch_next();
+        match next {
+            Some(item) => Some(item),
+            None => {
+                if self.req_list.is_empty() && self.current_time < self.limit {
+                    self.init_list();
+                    self.fetch_next()
                 }
-                Some(currt) if currt >= self.limit => None,
-                None => {
-                    let currt = self.get_next_message_timing();
-                    if currt > self.limit {
-                        None
-                    } else {
-                        self.current_time = currt;
-                        self.update(self.current_time);
-                        self.fetch_next()
-                    }
+                else {
+                    self.current_req = self.req_list.pop();
+                    self.fetch_next()
                 }
-                _ => None,
             }
         }
     }
@@ -224,7 +240,7 @@ struct RequestId {
     peers: (u32, u32),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct UserRequest {
     /// time of the initial request
     pub request_time: u64,
@@ -289,8 +305,9 @@ impl UserRequestIterator for UserRequest {
         self.topos_idx
     }
 
-    fn fetch_next(&mut self, bandwidth: Option<u32>) -> Option<u64> {
-        None
+    fn next_with_bandwidth(&mut self, _bandwidth: Option<u32>) -> Option<u64> {
+        // XXX consider handling the bandwidth 
+        Some(self.request_time)
     }
 }
 
