@@ -120,7 +120,7 @@ impl Runable {
     }
 
     #[inline]
-    fn days_to_timestamp(&self) -> u64 {
+    pub fn days_to_timestamp(&self) -> u64 {
         u64::from(self.days) * 24 * 60 * 60
     }
 
@@ -193,9 +193,9 @@ impl Runable {
                     UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
                 );
                 // add a reference to the histogram for sampling
-                model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
-                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                 model.set_contacts(self.contacts, &die);
+                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
+                model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 model
             })
             .collect();

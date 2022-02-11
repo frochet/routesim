@@ -67,7 +67,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     fn new<H: Hasher>(
         state: &mut H,
         request_time: u64,
-        request_size: usize,
+        request_size: isize,
         peers: (u32, u32),
         topo_idx: u16,
     ) -> Self;
@@ -203,7 +203,7 @@ impl<'a, T> UserModelInfo<'a, T> {
         T: UserRequestIterator,
     {
         match self.senders.get(&req.get_peers().1) {
-            None => panic!("BUG: Missing sender for {} ", req.get_peers().1),
+            None => panic!("BUG: Missing sender for {}; senders: {:?}", req.get_peers().1, self.senders),
             Some(sender) => sender.send(req),
         }
     }

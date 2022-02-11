@@ -1,5 +1,6 @@
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
+use crate::config::PAYLOAD_SIZE;
 /**
  * This is expected to contain a generic model for asynchronous message sending and fetching
  *
@@ -65,7 +66,7 @@ where
 
     fn with_timestamp_sampler(&mut self, timestamp_sampler: &'a Histogram) -> &mut Self {
         self.timestamp_sampler = Some(timestamp_sampler);
-        self.init_list();
+        //self.init_list();
         self
     }
 
@@ -148,20 +149,20 @@ impl<'a, T> SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone + PartialOrd + Ord + Eq + PartialEq,
 {
-    fn build_reqlist(&mut self) -> Option<T> {
+    fn build_req(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
         // req_timestamp is computed from the current period + the sampled value.
         let req_timestamp = self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64 + self.current_time;
         // if we select over the simulation limit; we stop.
-        if req_timestamp > self.limit {
+        if req_timestamp >= self.limit {
             return None;
         }
         let topo_idx: u16 = (req_timestamp / self.epoch as u64) as u16;
         let req = T::new(
             &mut self.hasher,
             req_timestamp,
-            self.size_sampler.unwrap().sample(&mut self.rng),
+            self.size_sampler.unwrap().sample(&mut self.rng) as isize,
             (self.uinfo.get_userid(), contact),
             topo_idx,
         );
@@ -174,7 +175,12 @@ where
     }
 
     #[inline]
-    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a,T> as Iterator>::Item> {
+    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a,T> as Iterator>::Item> {       
+        // that may happen if we build an empty list of requests because we're over the limit
+        // already
+        if self.current_req.is_none() {
+            return None;
+        }
         let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
         let req = self.current_req.as_mut().unwrap();
         let reqid = req.get_requestid();
@@ -196,14 +202,17 @@ where
 
     fn init_list(&mut self) {
         // draw requests from the timestamps distribution
-        for _ in 0..self.timestamp_sampler.unwrap().nbr_sampling {
-            if let Some(req) = self.build_reqlist() {
+        let t_sampler = self.timestamp_sampler.unwrap();
+        for _ in 0..t_sampler.nbr_sampling {
+            if let Some(req) = self.build_req() {
                 self.req_list.push(req);
             }
         }
-        self.req_list.sort_by(|r1, r2| r1.get_request_time().cmp(&r2.get_request_time()));
+        // should sort with the biggest request_time first.
+        self.req_list.sort_by(|r1, r2| r2.get_request_time().cmp(&r1.get_request_time()));
+        // pop the last element (i.e, the smallest request_time)
         self.current_req = self.req_list.pop();
-        self.current_time += self.timestamp_sampler.unwrap().period;
+        self.current_time += t_sampler.period+1;
     }
 
 
@@ -216,9 +225,20 @@ where
     type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.req_list.is_empty() {
+            self.init_list();
+        }
         let next = self.fetch_next();
         match next {
             Some(item) => Some(item),
+            // Three possible cases: 
+            // 1) we consumed all requests, which mean
+            // we can re-fill the list providing that the simulation shouldn't halt
+            // 2) the list is not empty, and we're not over the limit. Let's pop and consume
+            // the next request
+            // 3) the is not empty but we're over the limit. In that case, fetch_next() is
+            //    expected to return None
+            // So eventually we can handle the three cases with a if {} else {}
             None => {
                 if self.req_list.is_empty() && self.current_time < self.limit {
                     self.init_list();
@@ -245,7 +265,7 @@ pub struct UserRequest {
     /// time of the initial request
     pub request_time: u64,
     /// nbr packets
-    pub request_size: usize,
+    pub request_size: isize,
     /// peers
     pub peers: (u32, u32),
     /// requestid
@@ -264,12 +284,12 @@ impl Hash for UserRequest {
 
 impl UserRequestIterator for UserRequest {
     type RequestTime = u64;
-    type RequestSize = usize;
+    type RequestSize = isize;
 
     fn new<H: Hasher>(
         state: &mut H,
         request_time: u64,
-        request_size: usize,
+        request_size: isize,
         peers: (u32, u32),
         topos_idx: u16,
     ) -> Self {
@@ -315,11 +335,101 @@ impl Iterator for UserRequest {
     type Item = u64;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.request_size > 0 {
-            self.request_size -= 1;
+        // we can have a bin "0" for the size; we sent one packet in that case
+        if self.request_size >= 0 {
+            self.request_size -= PAYLOAD_SIZE as isize;
             Some(self.request_time)
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config;
+    use crate::routesim::Runable;
+    use serde_json::Result;
+
+    fn build_timestamp_hist() -> Result<Histogram> {
+        let jdata = r#"
+        {
+            "nbr_sampling": 10,
+            "bin_size": 5,
+            "data": [
+                1,
+                1,
+                1,
+                3,
+                3,
+                3,
+                4,
+                4,
+                14,
+                14,
+                3200,
+                3201,
+                4000
+            ]
+        }"#;
+        let histogram = Histogram::from_json(jdata)?;
+        Ok(histogram)
+    }
+
+    fn build_size_hist() -> Result<Histogram> {
+        let jdata = r#"
+        {
+            "nbr_sampling": 0,
+            "bin_size": 200,
+            "data": [
+                30,
+                42,
+                150,
+                800,
+                810,
+                830,
+                4400,
+                4450,
+                7200
+            ]
+        }"#;
+        let histogram = Histogram::from_json(jdata)?;
+        Ok(histogram)
+    }
+
+    #[test]
+    fn test_simple_email() {
+        let max = 4000;
+        let config = config::load("testfiles/1000_137_Random_BP_layout.csv", 1);
+        let t_sampler = build_timestamp_hist().unwrap();
+        let s_sampler = build_size_hist().unwrap();
+        let mut topologies = vec![];
+        topologies.push(config);
+        let mut runner = Runable::new(10, topologies, 1, 86401, 3);
+        let limit = runner.days_to_timestamp();
+        assert_eq!(limit, 86400);
+        runner.with_timestamps_hist(t_sampler)
+              .with_sizes_hist(s_sampler);
+        let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+
+        let usermodel = usermodels.get_mut(0).unwrap();
+        usermodel.set_limit(limit);
+        if let  Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
+            assert!(message_timing <= max);
+        }
+        else {
+            panic!("We should have messages!");
+        }
+
+        let mut last_timing: u64 = 0;
+        let mut count = 0;
+        for (message_timing, _guard, _mailbox, _requestid) in usermodel {
+            assert!(message_timing >= last_timing);
+            last_timing = message_timing;
+            count += 1;
+        }
+        assert!(last_timing >= 80000);
+
     }
 }
