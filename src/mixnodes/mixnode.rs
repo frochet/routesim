@@ -2,7 +2,7 @@ use super::mixerror::MixError;
 use std::error;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Mixnode {
     pub layer: i8,
     pub weight: f64,

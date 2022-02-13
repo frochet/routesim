@@ -23,7 +23,7 @@ pub const GUARDS_LAYER: usize = 1;
 
 /// A config is a set of mixes for each layer
 /// and a hashmap for unselected mixes.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TopologyConfig {
     /// The path length
     layers: [Vec<Mixnode>; PATH_LENGTH as usize],

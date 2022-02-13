@@ -405,10 +405,11 @@ mod tests {
         let t_sampler = build_timestamp_hist().unwrap();
         let s_sampler = build_size_hist().unwrap();
         let mut topologies = vec![];
+        topologies.push(config.clone());
         topologies.push(config);
-        let mut runner = Runable::new(10, topologies, 1, 86401, 3);
-        let limit = runner.days_to_timestamp();
-        assert_eq!(limit, 86400);
+        let mut runner = Runable::new(10, topologies, 1, 43200, 3);
+        let limit = runner.days_to_timestamp() - 1;
+        assert_eq!(limit, 86400-1);
         runner.with_timestamps_hist(t_sampler)
               .with_sizes_hist(s_sampler);
         let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
