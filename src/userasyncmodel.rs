@@ -1,6 +1,6 @@
+use crate::config::PAYLOAD_SIZE;
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
-use crate::config::PAYLOAD_SIZE;
 /**
  * This is expected to contain a generic model for asynchronous message sending and fetching
  *
@@ -16,7 +16,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 pub struct SimpleEmailModel<'a, T> {
-    tot_users: u32,
+    _tot_users: u32,
 
     current_time: u64,
     /// list of requests for the current period.
@@ -45,11 +45,11 @@ impl<'a, T> UserModel<'a, T> for SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
-    fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
+    fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
         let hasher = DefaultHasher::new();
         SimpleEmailModel {
-            tot_users,
+            _tot_users,
             current_time: 0,
             current_req: None,
             req_list: Vec::new(),
@@ -153,7 +153,8 @@ where
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
         // req_timestamp is computed from the current period + the sampled value.
-        let req_timestamp = self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64 + self.current_time;
+        let req_timestamp =
+            self.timestamp_sampler.unwrap().sample(&mut self.rng) as u64 + self.current_time;
         // if we select over the simulation limit; we stop.
         if req_timestamp >= self.limit {
             return None;
@@ -175,7 +176,7 @@ where
     }
 
     #[inline]
-    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a,T> as Iterator>::Item> {       
+    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a, T> as Iterator>::Item> {
         // that may happen if we build an empty list of requests because we're over the limit
         // already
         if self.current_req.is_none() {
@@ -188,12 +189,12 @@ where
             Some(timestamp) if timestamp < self.limit => {
                 self.update(timestamp);
                 Some((
-                        timestamp,
-                        self.uinfo.get_selected_guard(),
-                        mailbox,
-                        Some(reqid),
+                    timestamp,
+                    self.uinfo.get_selected_guard(),
+                    mailbox,
+                    Some(reqid),
                 ))
-            },
+            }
             // we're over the limit
             Some(_) => None,
             None => None,
@@ -209,13 +210,12 @@ where
             }
         }
         // should sort with the biggest request_time first.
-        self.req_list.sort_by(|r1, r2| r2.get_request_time().cmp(&r1.get_request_time()));
+        self.req_list
+            .sort_by(|r1, r2| r2.get_request_time().cmp(&r1.get_request_time()));
         // pop the last element (i.e, the smallest request_time)
         self.current_req = self.req_list.pop();
-        self.current_time += t_sampler.period+1;
+        self.current_time += t_sampler.period + 1;
     }
-
-
 }
 
 impl<'a, T> Iterator for SimpleEmailModel<'a, T>
@@ -231,7 +231,7 @@ where
         let next = self.fetch_next();
         match next {
             Some(item) => Some(item),
-            // Three possible cases: 
+            // Three possible cases:
             // 1) we consumed all requests, which mean
             // we can re-fill the list providing that the simulation shouldn't halt
             // 2) the list is not empty, and we're not over the limit. Let's pop and consume
@@ -243,8 +243,7 @@ where
                 if self.req_list.is_empty() && self.current_time < self.limit {
                     self.init_list();
                     self.fetch_next()
-                }
-                else {
+                } else {
                     self.current_req = self.req_list.pop();
                     self.fetch_next()
                 }
@@ -326,7 +325,7 @@ impl UserRequestIterator for UserRequest {
     }
 
     fn next_with_bandwidth(&mut self, _bandwidth: Option<u32>) -> Option<u64> {
-        // XXX consider handling the bandwidth 
+        // XXX consider handling the bandwidth
         Some(self.request_time)
     }
 }
@@ -409,28 +408,25 @@ mod tests {
         topologies.push(config);
         let mut runner = Runable::new(10, topologies, 1, 43200, 3);
         let limit = runner.days_to_timestamp() - 1;
-        assert_eq!(limit, 86400-1);
-        runner.with_timestamps_hist(t_sampler)
-              .with_sizes_hist(s_sampler);
+        assert_eq!(limit, 86400 - 1);
+        runner
+            .with_timestamps_hist(t_sampler)
+            .with_sizes_hist(s_sampler);
         let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
 
         let usermodel = usermodels.get_mut(0).unwrap();
         usermodel.set_limit(limit);
-        if let  Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
+        if let Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
             assert!(message_timing <= max);
-        }
-        else {
+        } else {
             panic!("We should have messages!");
         }
 
         let mut last_timing: u64 = 0;
-        let mut count = 0;
         for (message_timing, _guard, _mailbox, _requestid) in usermodel {
             assert!(message_timing >= last_timing);
             last_timing = message_timing;
-            count += 1;
         }
         assert!(last_timing >= 80000);
-
     }
 }

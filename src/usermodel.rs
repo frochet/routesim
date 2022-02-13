@@ -203,7 +203,11 @@ impl<'a, T> UserModelInfo<'a, T> {
         T: UserRequestIterator,
     {
         match self.senders.get(&req.get_peers().1) {
-            None => panic!("BUG: Missing sender for {}; senders: {:?}", req.get_peers().1, self.senders),
+            None => panic!(
+                "BUG: Missing sender for {}; senders: {:?}",
+                req.get_peers().1,
+                self.senders
+            ),
             Some(sender) => sender.send(req),
         }
     }

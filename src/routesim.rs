@@ -140,8 +140,7 @@ impl Runable {
                 "{strdate} {user} {rid} {}",
                 path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
             );
-        }
-        else {
+        } else {
             log = format!(
                 "{strdate} {user} {}",
                 path.fold(String::new(), |p, hop| p + &hop.mixid.to_string() + ",")
