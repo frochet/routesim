@@ -5,6 +5,7 @@ use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::unbounded;
+use crossbeam_channel::Sender;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -199,17 +200,26 @@ impl Runable {
             })
             .collect();
         // todo parallelize that somehow
+        let mut senders: Vec<Sender<U>> = Vec::with_capacity(self.users as usize);
         for i in 0..self.users {
             // let's create one receiver per user, and give
             // one sender to every other users
             let (s, r) = unbounded();
+            //usermodels[i as usize].add_sender(i, s);
+            senders.push(s);
             usermodels[i as usize].with_receiver(r);
-            for j in 0..self.users {
-                if j != i {
-                    usermodels[j as usize].add_sender(i, s.clone())
-                }
-            }
-            usermodels[i as usize].add_sender(i, s);
+        }
+        for i in 0..self.users {
+            let contacts: Vec<u32> = usermodels[i as usize].get_contacts().unwrap().iter().map(|c| *c).collect();
+            contacts.iter().for_each(|j| {
+                usermodels[i as usize].add_sender(*j, senders[*j as usize].clone());
+            });
+            usermodels[i as usize].add_sender(i, senders[i as usize].clone());
+            //for j in 0..self.users {
+                //if j != i {
+                    //usermodels[j as usize].add_sender(i, s.clone())
+                //}
+            //}
         }
         usermodels
     }

@@ -36,6 +36,7 @@ pub trait UserModel<'a, T>:
         None
     }
     fn set_contacts(&mut self, _contacts: u32, _die: &Uniform<u32>) {}
+    fn get_contacts(&self) -> Option<&[u32]> {None}
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
@@ -204,7 +205,8 @@ impl<'a, T> UserModelInfo<'a, T> {
     {
         match self.senders.get(&req.get_peers().1) {
             None => panic!(
-                "BUG: Missing sender for {}; senders: {:?}",
+                "BUG: User {} is Missing sender {}; senders: {:?}",
+                req.get_peers().0,
                 req.get_peers().1,
                 self.senders
             ),
