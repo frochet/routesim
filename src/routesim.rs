@@ -210,15 +210,20 @@ impl Runable {
             usermodels[i as usize].with_receiver(r);
         }
         for i in 0..self.users {
-            let contacts: Vec<u32> = usermodels[i as usize].get_contacts().unwrap().iter().map(|c| *c).collect();
+            let contacts: Vec<u32> = usermodels[i as usize]
+                .get_contacts()
+                .unwrap()
+                .iter()
+                .map(|c| *c)
+                .collect();
             contacts.iter().for_each(|j| {
                 usermodels[i as usize].add_sender(*j, senders[*j as usize].clone());
             });
             usermodels[i as usize].add_sender(i, senders[i as usize].clone());
             //for j in 0..self.users {
-                //if j != i {
-                    //usermodels[j as usize].add_sender(i, s.clone())
-                //}
+            //if j != i {
+            //usermodels[j as usize].add_sender(i, s.clone())
+            //}
             //}
         }
         usermodels

@@ -3,7 +3,6 @@ use rand_distr::WeightedAliasIndex;
 use serde::Deserialize;
 use serde_json::Result;
 
-
 #[derive(Deserialize)]
 struct HistData {
     nbr_sampling: u32,

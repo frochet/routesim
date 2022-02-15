@@ -119,7 +119,7 @@ where
             }
         }
     }
-    
+
     fn get_contacts(&self) -> Option<&[u32]> {
         Some(&self.uinfo.contacts_list)
     }
@@ -421,8 +421,13 @@ mod tests {
 
         let usermodel = usermodels.get_mut(0).unwrap();
         usermodel.set_limit(limit);
-        let contacts: Vec<u32> = usermodel.get_contacts().unwrap().iter().map(|c| *c).collect();
-        assert_eq!(contacts.len(), 3+1); // 3 senders and himself
+        let contacts: Vec<u32> = usermodel
+            .get_contacts()
+            .unwrap()
+            .iter()
+            .map(|c| *c)
+            .collect();
+        assert_eq!(contacts.len(), 3 + 1); // 3 senders and himself
         if let Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
             assert!(message_timing <= max);
         } else {

@@ -36,7 +36,9 @@ pub trait UserModel<'a, T>:
         None
     }
     fn set_contacts(&mut self, _contacts: u32, _die: &Uniform<u32>) {}
-    fn get_contacts(&self) -> Option<&[u32]> {None}
+    fn get_contacts(&self) -> Option<&[u32]> {
+        None
+    }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
     fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
