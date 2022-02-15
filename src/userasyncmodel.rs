@@ -372,7 +372,7 @@ mod tests {
                 4000
             ]
         }"#;
-        let histogram = Histogram::from_json(jdata)?;
+        let histogram = Histogram::from_json(jdata, 5)?;
         Ok(histogram)
     }
 
@@ -393,7 +393,7 @@ mod tests {
                 7200
             ]
         }"#;
-        let histogram = Histogram::from_json(jdata)?;
+        let histogram = Histogram::from_json(jdata, 5)?;
         Ok(histogram)
     }
 

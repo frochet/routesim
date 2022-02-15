@@ -3,10 +3,10 @@ use rand_distr::WeightedAliasIndex;
 use serde::Deserialize;
 use serde_json::Result;
 
+
 #[derive(Deserialize)]
 struct HistData {
     nbr_sampling: u32,
-    bin_size: usize,
     data: Vec<usize>,
 }
 
@@ -28,7 +28,7 @@ impl Histogram {
     ///     "data": list,
     /// }
     /// data should be a list of timestamps.
-    pub fn from_json(json_data: &str) -> Result<Histogram> {
+    pub fn from_json(json_data: &str, bin_size: usize) -> Result<Histogram> {
         let mut jdata: HistData = serde_json::from_str(json_data)?;
         jdata.data.sort();
         let period = jdata.data.last().unwrap_or(&(60 * 60 * 24 * 7 as usize))
@@ -43,7 +43,7 @@ impl Histogram {
             .map(|timestamp| {
                 let curval: i64 = (*timestamp - *first) as i64;
                 let curbin: i64 = bin as i64;
-                if curval - curbin <= curbin + jdata.bin_size as i64 - curval {
+                if curval - curbin <= curbin + bin_size as i64 - curval {
                     count += 1;
                     //cmp addr
                     if timestamp != last {
@@ -57,16 +57,16 @@ impl Histogram {
                     let this_bin = bin;
                     count = 1;
                     let mut cur_timestamp: i64 = *timestamp as i64;
-                    while cur_timestamp % jdata.bin_size as i64 != 0 {
+                    while cur_timestamp % bin_size as i64 != 0 {
                         cur_timestamp -= 1
                     }
                     let prev_bin: i64 = cur_timestamp as i64;
                     if *timestamp as i64 - prev_bin
-                        <= prev_bin + (jdata.bin_size as i64) - *timestamp as i64
+                        <= prev_bin + (bin_size as i64) - *timestamp as i64
                     {
                         bin = prev_bin;
                     } else {
-                        bin = prev_bin + jdata.bin_size as i64;
+                        bin = prev_bin + bin_size as i64;
                     }
                     (this_bin as usize, this_count as usize)
                 }
@@ -101,7 +101,6 @@ mod tests {
         let jdata = r#"
         {
             "nbr_sampling": 10,
-            "bin_size": 5,
             "data": [
                 1,
                 1,
@@ -115,7 +114,7 @@ mod tests {
                 14
             ]
         }"#;
-        let histogram = Histogram::from_json(jdata)?;
+        let histogram = Histogram::from_json(jdata, 5)?;
         Ok(histogram)
     }
 

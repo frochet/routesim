@@ -105,10 +105,10 @@ fn main() {
             // try to open timstamps_h and sizes_h. Panic if it fails.
             let timestamps_s =
                 std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
-            let timestamps_h: Histogram = Histogram::from_json(&timestamps_s)
+            let timestamps_h: Histogram = Histogram::from_json(&timestamps_s, 60)
                 .expect("Something went wrong while processing the json data");
             let sizes_s = std::fs::read_to_string(&opts.sizes_h).expect("Couldn't open the file");
-            let sizes_h: Histogram = Histogram::from_json(&sizes_s)
+            let sizes_h: Histogram = Histogram::from_json(&sizes_s, 2048)
                 .expect("Something went wrong while processing the json data");
             runner
                 .with_timestamps_hist(timestamps_h)
