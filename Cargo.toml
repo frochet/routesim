@@ -16,6 +16,7 @@ array-init = "2.0.0"
 histogram-sampler = "0.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+chrono = "0.4.19"
 
 [profile.release]
 lto = true

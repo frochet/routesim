@@ -10,6 +10,7 @@ use rand::distributions::Uniform;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
+use chrono::NaiveDateTime;
 
 const DAY: u64 = 60 * 60 * 24;
 const HOUR: u64 = 60 * 60;
@@ -105,19 +106,8 @@ impl Runable {
     }
 
     fn format_message_timing(timing: u64) -> String {
-        let mut datestr: String = "day ".into();
-        let mut timing = timing;
-        let days_val: u64 = timing / DAY;
-        timing -= days_val * DAY;
-        let hours_val: u64 = timing / HOUR;
-        timing -= hours_val * HOUR;
-        let mins_val: u64 = timing / 60;
-        timing -= mins_val * 60;
-        datestr.push_str(&format!(
-            "{}, {}:{}:{}",
-            days_val, hours_val, mins_val, timing
-        ));
-        datestr
+        let dt = NaiveDateTime::from_timestamp(timing as i64, 0);
+        dt.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 
     #[inline]
@@ -300,7 +290,7 @@ fn test_date_formatting() {
     let mut strdate = Runable::format_message_timing(timing);
     assert_eq!(strdate, "day 0, 0:11:0");
     timing = timing + 1;
-    strdate = Runable::format_message_timing(timing);
+
     assert_eq!(strdate, "day 0, 0:11:1");
     timing = timing + 25 * 60 * 60;
     strdate = Runable::format_message_timing(timing);
