@@ -1,44 +1,37 @@
 
-This is a simplistic User simulator for path generation in a Mixnet.
+This is a behavioural simulator for user activity in a Mixnet. The objective of
+this tool is to evaluate the probability of a deanonymization through time,
+assuming some level of adversarial activity among the mixes. This probability
+of deanonymization is determined by the user behaviour (i.e., how many messages
+the user sends, and what sending distribution through time).
 
-This program reads a mixnet configuration from a file and applies a user model to
-generate routes through time for a given number of users. It outputs to stdout
-the following kind of line:
+This program can take in input behavioural patterns; i.e., a probabilistic
+model of the user activity through a period. The simulator can then play this
+pattern upon a configured virtual time limit (in days). For example, the
+simulator can play a user email pattern within the Mixnet during 100 days.
+
+We read topologies configuration from files, in which each file matchs an epoch
+(i.e., an epoch is a timeframe during which the network topology remains the
+same). The simulator then output path information for each message sent by each
+sampled user (i.e., we apply a Monte Carlo method). As a matter of example, the
+"simple" model outputs the following kind of line:
 
 ...  
-day 0, 21:20:0, 0, 230,668,96,false  
+1970-01-01 00:44:31 2538 570,260,1007, false
 ...  
 
-containing the date, the user id, the path (mix ids) and whether the route is
-fully compromised or not (i.e., whether the user selected 3 malicious mixes).
+containing the date, the sample id, the path (mix ids) and whether the route is
+fully compromised or not (i.e., whether the user selected PATH_LENGTH malicious mixes).
 
 The timings and number of path sampled depends on the user model selected. E.g.,
 for the "simple" user model, one path is sampled every 10 minutes on average
 (uniformly random in 5, 15 minutes).
 
-More complex user models and logging mechanisms could be implemented.
+More complex user models and logging mechanisms are also implemented.
+Fundamentally, we derive two classes of interactions with the mixnet:
+Synchronous one. E.g., sending files to a dropbox, or sending a HTTP request to
+a Web Server). And asynchronous ones that mainly capture potential interaction
+between anonymous users (e.g., some user send a message to someone's else
+mailbox; and the peer can then anonymously fetch the message asynchronously).
 
-### User models
-
-- a Signal-type of user model, in which we sample routes according to some
-  distribution representing habits in exchanging messages on Signal
-- Email
-
-### Logging mechanisms:
-
-- Social graph logging. E.g., assuming graphs of users, how long would it take
-  for the adversary with some compromised nodes to deanonymize the social graph?
-  (i.e., for each user, observing all outgoing edges).  
-
-- Query/Response => What fraction of Query/responses for any type of modelised
-  protocol are deanonymized? (i.e., a query can be of size N, a response of size
-  M, with usually N << M). The query and the response are decomposed in many
-  messages sent within many routes. What is the probability that at least one of
-  those messages is compromised? How long does it take for everyone to get
-  screwed?
-
-
-
-# TODO implementing a guard mechanism and the ability to update the network
-  configure through the simulation
 
