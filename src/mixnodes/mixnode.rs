@@ -23,7 +23,11 @@ impl FromStr for Mixnode {
             vec if vec.len() >= 4 => {
                 let mixid_p = vec[0].parse::<u32>()?;
                 let bw_p = vec[1].parse::<f64>()?;
-                let is_malicious_p = vec[2].parse::<bool>()?;
+                let is_malicious_p = vec[2].parse::<bool>();
+                let is_malicious_p = match is_malicious_p {
+                    Ok(mal) => mal,
+                    Err(_e) => false,
+                };
                 let layer_p = vec[3].parse::<i8>()?;
                 Ok(Mixnode {
                     layer: layer_p,

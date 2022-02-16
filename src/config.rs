@@ -25,6 +25,7 @@ pub const GUARDS_LAYER: usize = 1;
 /// and a hashmap for unselected mixes.
 #[derive(Default, Clone)]
 pub struct TopologyConfig {
+    pub filename: String,
     /// The path length
     layers: [Vec<Mixnode>; PATH_LENGTH as usize],
     wc_layers: [Box<Option<WeightedAliasIndex<f64>>>; PATH_LENGTH as usize],
@@ -37,8 +38,9 @@ pub struct TopologyConfig {
 }
 
 impl TopologyConfig {
-    pub fn new() -> Self {
+    pub fn new(filename: String) -> Self {
         TopologyConfig {
+            filename,
             wc_layers: array_init(|_| Box::new(None)),
             ..Default::default()
         }
@@ -111,15 +113,16 @@ pub fn load<P>(filename: P, tot_users: u32) -> TopologyConfig
 where
     P: AsRef<Path>,
 {
-    let file = File::open(filename).expect("Unable to open the file");
-    let mut config: TopologyConfig = TopologyConfig::new();
+    let file = File::open(&filename).expect("Unable to open the file");
+    let mut config: TopologyConfig =
+        TopologyConfig::new(filename.as_ref().to_str().unwrap().to_owned());
     //skip header
     for line_r in BufReader::new(file).lines().skip(1) {
         if let Ok(line) = line_r {
             let mix: Mixnode = line.parse().unwrap_or_else(|_| {
                 panic!(
-                    "Unable to parse into a Mixnode -- Is
-                                                            your data correct? {}",
+                    "Unable to parse {} into a Mixnode -- Is your data correct? {}",
+                    filename.as_ref().display(),
                     line
                 )
             });
@@ -153,7 +156,7 @@ where
 
 #[test]
 fn load_test_topology_config() {
-    let config = load("testfiles/1000_137_Random_BP_layout.csv", 1);
+    let config = load("testfiles/single_layout/1000_137_Random_BP_layout.csv", 1);
     let mix = &config.layers()[0][42];
     //42│20.430784458454426│False│0
     assert_eq!(mix.is_malicious, false);
@@ -161,7 +164,7 @@ fn load_test_topology_config() {
 }
 #[test]
 fn test_sample_path() {
-    let config = load("testfiles/1000_137_Random_BP_layout.csv", 10);
+    let config = load("testfiles/single_layout/1000_137_Random_BP_layout.csv", 10);
     let mut rng = thread_rng();
     let path = config.sample_path(&mut rng, None);
     let path = path.collect::<Vec<_>>();

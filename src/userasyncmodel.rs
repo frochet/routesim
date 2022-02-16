@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn test_simple_email() {
         let max = 4000;
-        let config = config::load("testfiles/1000_137_Random_BP_layout.csv", 1);
+        let config = config::load("testfiles/single_layout/1000_137_Random_BP_layout.csv", 1);
         let t_sampler = build_timestamp_hist().unwrap();
         let s_sampler = build_size_hist().unwrap();
         let mut topologies = vec![];

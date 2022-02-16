@@ -8,9 +8,12 @@ mod userasyncmodel;
 mod usermodel;
 
 use clap::{AppSettings, Clap};
+use config::TopologyConfig;
 use histogram::Histogram;
+use rayon::prelude::*;
 use routesim::Runable;
 use simplemodel::*;
+use std::fs;
 use userasyncmodel::*;
 
 #[derive(Clap)]
@@ -21,9 +24,9 @@ struct Opts {
         long,
         required = true,
         parse(from_os_str),
-        about = "Network config containing mixes"
+        about = "Directory containing Network configs containing mixes (and nothing else!)"
     )]
-    filename: std::path::PathBuf,
+    in_dir: std::path::PathBuf,
     #[clap(
         long,
         parse(from_os_str),
@@ -69,13 +72,22 @@ struct Opts {
     contacts: u32,
 }
 
+fn read_entries(path: impl AsRef<std::path::Path>) -> std::io::Result<Vec<std::path::PathBuf>> {
+    let paths = fs::read_dir(path)?
+        .map(|res| res.map(|e| e.path()))
+        .collect::<Result<Vec<_>, std::io::Error>>()?;
+    Ok(paths)
+}
+
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let netconf = config::load(opts.filename, opts.users);
-
-    let mut topologies = vec![];
-    topologies.push(netconf);
+    let filenames = read_entries(&opts.in_dir).expect("Something went wrong reading paths");
+    let mut topologies: Vec<TopologyConfig> = filenames
+        .into_par_iter()
+        .map(|filename| config::load(filename, opts.users))
+        .collect();
+    topologies.sort_by(|a, b| a.filename.cmp(&b.filename));
     let n = topologies.len();
 
     let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch, opts.contacts);
