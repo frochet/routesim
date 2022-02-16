@@ -26,6 +26,8 @@ pub const GUARDS_LAYER: usize = 1;
 #[derive(Default, Clone)]
 pub struct TopologyConfig {
     pub filename: String,
+
+    pub epoch: u32,
     /// The path length
     layers: [Vec<Mixnode>; PATH_LENGTH as usize],
     wc_layers: [Box<Option<WeightedAliasIndex<f64>>>; PATH_LENGTH as usize],
@@ -38,9 +40,10 @@ pub struct TopologyConfig {
 }
 
 impl TopologyConfig {
-    pub fn new(filename: String) -> Self {
+    pub fn new(filename: String, epoch: u32) -> Self {
         TopologyConfig {
             filename,
+            epoch,
             wc_layers: array_init(|_| Box::new(None)),
             ..Default::default()
         }
@@ -114,10 +117,22 @@ where
     P: AsRef<Path>,
 {
     let file = File::open(&filename).expect("Unable to open the file");
-    let mut config: TopologyConfig =
-        TopologyConfig::new(filename.as_ref().to_str().unwrap().to_owned());
+    let filename_string: String = filename.as_ref().to_str().unwrap().to_owned();
+    let mut line_reader = BufReader::new(file).lines();
+    let mut epoch: u32 = 0;
+    if let Some(header) = line_reader.next() {
+        let header_val = header.unwrap_or("mixid, bandwidth, malicious, epoch_0".to_string());
+        let epoch_val = header_val.split(',').nth(3).unwrap_or("epoch_0");
+        let epoch_val = epoch_val.split('_').nth(1);
+        match epoch_val {
+            Some(some_integer) => epoch = some_integer.parse::<u32>().unwrap(),
+            None => (),
+        }
+    }
+    let mut config: TopologyConfig = TopologyConfig::new(filename_string, epoch);
+
     //skip header
-    for line_r in BufReader::new(file).lines().skip(1) {
+    for line_r in line_reader {
         if let Ok(line) = line_r {
             let mix: Mixnode = line.parse().unwrap_or_else(|_| {
                 panic!(

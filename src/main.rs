@@ -87,7 +87,7 @@ fn main() {
         .into_par_iter()
         .map(|filename| config::load(filename, opts.users))
         .collect();
-    topologies.sort_by(|a, b| a.filename.cmp(&b.filename));
+    topologies.sort_by(|a, b| a.epoch.cmp(&b.epoch));
     let n = topologies.len();
 
     let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch, opts.contacts);
