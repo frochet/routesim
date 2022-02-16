@@ -4,16 +4,13 @@ use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
+use chrono::NaiveDateTime;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::vec::IntoIter;
-use chrono::NaiveDateTime;
-
-const DAY: u64 = 60 * 60 * 24;
-const HOUR: u64 = 60 * 60;
 
 /// Contains information required for running the simulation
 #[derive(Default)]
@@ -189,13 +186,11 @@ impl Runable {
                 model
             })
             .collect();
-        // todo parallelize that somehow
         let mut senders: Vec<Sender<U>> = Vec::with_capacity(self.users as usize);
         for i in 0..self.users {
             // let's create one receiver per user, and give
             // one sender to every other users
             let (s, r) = unbounded();
-            //usermodels[i as usize].add_sender(i, s);
             senders.push(s);
             usermodels[i as usize].with_receiver(r);
         }
@@ -210,11 +205,6 @@ impl Runable {
                 usermodels[i as usize].add_sender(*j, senders[*j as usize].clone());
             });
             usermodels[i as usize].add_sender(i, senders[i as usize].clone());
-            //for j in 0..self.users {
-            //if j != i {
-            //usermodels[j as usize].add_sender(i, s.clone())
-            //}
-            //}
         }
         usermodels
     }
@@ -288,11 +278,11 @@ impl Runable {
 fn test_date_formatting() {
     let mut timing = 60 * 11;
     let mut strdate = Runable::format_message_timing(timing);
-    assert_eq!(strdate, "day 0, 0:11:0");
+    assert_eq!(strdate, "1970-01-01 00:11:00");
     timing = timing + 1;
-
-    assert_eq!(strdate, "day 0, 0:11:1");
+    strdate = Runable::format_message_timing(timing);
+    assert_eq!(strdate, "1970-01-01 00:11:01");
     timing = timing + 25 * 60 * 60;
     strdate = Runable::format_message_timing(timing);
-    assert_eq!(strdate, "day 1, 1:11:1");
+    assert_eq!(strdate, "1970-01-02 01:11:01");
 }

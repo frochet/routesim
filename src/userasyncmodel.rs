@@ -427,7 +427,7 @@ mod tests {
             .iter()
             .map(|c| *c)
             .collect();
-        assert_eq!(contacts.len(), 3 + 1); // 3 senders and himself
+        assert_eq!(contacts.len(), 3);
         if let Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
             assert!(message_timing <= max);
         } else {
