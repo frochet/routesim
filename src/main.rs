@@ -89,23 +89,26 @@ fn main() {
         .collect();
     topologies.sort_by(|a, b| a.epoch.cmp(&b.epoch));
     let n = topologies.len();
+    
+    let mut epoch = opts.epoch;
+    // check whether the parameters days; config and epoch make sense
+    if epoch * n as u32 <= opts.days * 24 * 60 * 60 {
+        eprintln!("Make sure you have enough configuration files, and that the epoch and days value make sense!");
+        epoch = 86400*opts.days + 1;
+        eprintln!("Setting epoch to {epoch}. Maybe you want to change that");
+    }
+    // we should sample users in a valid range
+    if opts.contacts > opts.users {
+        panic!("The number of contacts cannot be higher than the number of samples (users)");
+    }
 
-    let mut runner = Runable::new(opts.users, topologies, opts.days, opts.epoch, opts.contacts);
+    let mut runner = Runable::new(opts.users, topologies, opts.days, epoch, opts.contacts);
 
     if !opts.disable_guards {
         runner.with_guards();
     }
     if opts.to_console {
         runner.with_console();
-    }
-    // we should sample users in a valid range
-    if opts.contacts > opts.users {
-        panic!("The number of contacts cannot be higher than the number of samples (users)");
-    }
-    // check whether the parameters days; config and epoch make sense
-    // panic otherwise.
-    if opts.epoch * n as u32 <= opts.days * 24 * 60 * 60 {
-        panic!("Make sure you have enough configuration files, and that the epoch and days value make sense!")
     }
 
     match &opts.usermod[..] {
