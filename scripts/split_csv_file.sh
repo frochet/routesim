@@ -8,5 +8,5 @@ count_cols() {
 for (( c=3 ; c<$(count_cols); c++ ))
 do	
 	epoch=$((c-3))
-	cut -d "," -f 1-3,$c < $FILE > $PWD/epoch${epoch}_${FILENAME}
+	cut -d "," -f 1-3,$((c+1)) < $FILE > $PWD/epoch${epoch}_${FILENAME}
 done

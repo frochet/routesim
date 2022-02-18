@@ -188,7 +188,8 @@ where
         if self.current_req.is_none() {
             return None;
         }
-        let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
+        let mailbox = self.uinfo.topos[self.current_req.as_ref().unwrap().get_topos_idx() as usize].get_mailbox(self.current_req.as_ref().unwrap().get_peers().1);
+        //let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
         let req = self.current_req.as_mut().unwrap();
         let reqid = req.get_requestid();
         match req.next() {

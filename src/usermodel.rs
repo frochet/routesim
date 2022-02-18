@@ -99,7 +99,7 @@ pub struct UserModelInfo<'a, T> {
     #[allow(dead_code)]
     userid: u32,
     /// Mixnet topology
-    topos: &'a [TopologyConfig],
+    pub topos: &'a [TopologyConfig],
     /// Guards information
     guards: Option<Vec<&'a Mixnode>>,
     /// The guard we're currently using
