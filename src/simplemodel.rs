@@ -81,7 +81,7 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
 
 impl<'a, T> Iterator for SimpleSynchronousModel<'a, T> {
     // "%days, %hh,%mm,%ss
-    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
+    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
     fn next(&mut self) -> Option<Self::Item> {
         // update user information

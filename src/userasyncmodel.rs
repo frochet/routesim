@@ -12,8 +12,9 @@ use crossbeam_channel::{Receiver, Sender};
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use siphasher::sip128::{Hasher128, SipHasher};
+
 
 pub struct SimpleEmailModel<'a, T> {
     _tot_users: u32,
@@ -38,7 +39,7 @@ pub struct SimpleEmailModel<'a, T> {
 
     rng: SmallRng,
 
-    hasher: DefaultHasher,
+    hasher: SipHasher,
 }
 
 impl<'a, T> UserModel<'a, T> for SimpleEmailModel<'a, T>
@@ -47,7 +48,7 @@ where
 {
     fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
-        let hasher = DefaultHasher::new();
+        let hasher = SipHasher::new();
         SimpleEmailModel {
             _tot_users,
             current_time: 0,
@@ -227,7 +228,7 @@ impl<'a, T> Iterator for SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone + Eq + Ord + PartialEq + PartialOrd,
 {
-    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>);
+    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.req_list.is_empty() {
@@ -273,12 +274,12 @@ pub struct UserRequest {
     /// peers
     pub peers: (u32, u32),
     /// requestid
-    pub requestid: u64,
+    pub requestid: u128,
     /// current topology used when this object is created
     pub topos_idx: u16,
 }
 
-impl Hash for UserRequest {
+impl std::hash::Hash for UserRequest {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.request_time.hash(state);
         self.request_size.hash(state);
@@ -290,7 +291,7 @@ impl UserRequestIterator for UserRequest {
     type RequestTime = u64;
     type RequestSize = isize;
 
-    fn new<H: Hasher>(
+    fn new<H: Hasher + Hasher128>(
         state: &mut H,
         request_time: u64,
         request_size: isize,
@@ -305,7 +306,7 @@ impl UserRequestIterator for UserRequest {
             topos_idx,
         };
         r.hash(state);
-        r.requestid = state.finish();
+        r.requestid = state.finish128().as_u128();
         r
     }
 
@@ -313,7 +314,7 @@ impl UserRequestIterator for UserRequest {
         self.peers
     }
 
-    fn get_requestid(&self) -> u64 {
+    fn get_requestid(&self) -> u128 {
         self.requestid
     }
 

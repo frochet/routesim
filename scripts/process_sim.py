@@ -36,20 +36,44 @@ def parse_log_routesim_async(filename):
            'nbr_emails_until_compromise': {},
            'time_to_first_compromise': {}}
     with open(filename) as logfile:
-        tmp = {}
+        tmp = {'message':{}, 'request':{}, 'confirmed': {}}
+        counts = {}
+        request_compromised = {}
         for line in logfile:
             tab = line.split()
             is_compromised = strtobool(tab[-1])
             sample_id = int(tab[2])
-            request_id = int(tab[3])
+            request_id = int(tab[3]) 
+            try:
+                counts[sample_id]['count'] += 1
+            except KeyError:
+                counts[sample_id] = {}
+                counts[sample_id]['count'] = 0
+            try:
+                counts[sample_id]['request'][request_id] = True
+            except KeyError:
+                counts[sample_id]['request'] = {}
+                counts[sample_id]['request'][request_id] = True
+
             if is_compromised:
+                if request_id not in request_compromised:
+                    if sample_id not in tmp['message']:
+                        tmp['message'][sample_id] = {}
+                        tmp['request'][sample_id] = {}
+                    request_compromised[request_id] = True
+                    tmp['message'][sample_id][request_id] = counts[sample_id]['count']
+                    tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
                 try:
-                    if len(tmp[request_id]) == 1
-                        tmp[request_id].append(sample_id)
+                    ## don't add multiple times for multiple messages deanonymized in the same request
+                    if request_id in tmp['confirmed'] and sample_id != tmp['confirmed'][request_id]:
                         dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
-                        tmp[request_id].append(dt.timestamp())
+                        sample = tmp['confirmed'][request_id]
+                        res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
+                        res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
+                        res['time_to_first_compromise'][sample] =  dt.timestamp()
+                        
                 except KeyError:
-                    tmp[request_id] = [sample_id]
+                    tmp['confirmed'][request_id] = sample_id
 
             
     return res

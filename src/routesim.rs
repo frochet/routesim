@@ -120,7 +120,7 @@ impl Runable {
         path: IntoIter<&Mixnode>,
         is_malicious: bool,
         mailbox: Option<&MailBox>,
-        requestid: Option<u64>,
+        requestid: Option<u128>,
     ) {
         let mut log: String;
         if let Some(rid) = requestid {
