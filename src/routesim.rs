@@ -147,7 +147,7 @@ impl Runable {
             // does not flush for each path (i.e., println should be one system call per call. This
             // should not).
             if *line_count == 1000 {
-                log.push_str(&format!(" {is_malicious}\n;"));
+                log.push_str(&format!(" {is_malicious}\n"));
             }
             else {
                 log.push_str(&format!(" {is_malicious};"));
