@@ -7,6 +7,7 @@ import csv
 from datetime import datetime
 from distutils.util import strtobool
 import math
+import pdb
 
 parser = argparse.ArgumentParser(description="""Process results from routesim.py.
                                  Output serialized objects for plotting script,
@@ -19,6 +20,7 @@ parser.add_argument("--outname", help="filename for the pickle storage")
 parser.add_argument("--format", default="simple", help="tell the parser the expected format") 
 parser.add_argument("--nbr_messages_until_compromise", action="store_true",
                     help="Display the number of messages until compromise, on average")
+parser.add_argument("--samples", type=int, help="Number of samples in file")
 
 def parse_log_routesim_async(filename):
     """
@@ -36,20 +38,42 @@ def parse_log_routesim_async(filename):
            'nbr_emails_until_compromise': {},
            'time_to_first_compromise': {}}
     with open(filename) as logfile:
-        tmp = {}
+        tmp = {'message':{}, 'request':{}, 'confirmed': {}}
+        counts = {}
+        request_compromised = {}
         for line in logfile:
             tab = line.split()
             is_compromised = strtobool(tab[-1])
             sample_id = int(tab[2])
-            request_id = int(tab[3])
+            request_id = int(tab[3]) 
+            try:
+                counts[sample_id]['count'] += 1
+                counts[sample_id]['request'][request_id] = True
+            except KeyError:
+                counts[sample_id] = {}
+                counts[sample_id]['count'] = 0
+                counts[sample_id]['request'] = {}
+                counts[sample_id]['request'][request_id] = True
+
             if is_compromised:
+                if request_id not in request_compromised:
+                    if sample_id not in tmp['message']:
+                        tmp['message'][sample_id] = {}
+                        tmp['request'][sample_id] = {}
+                    request_compromised[request_id] = True
+                    tmp['message'][sample_id][request_id] = counts[sample_id]['count']
+                    tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
                 try:
-                    if len(tmp[request_id]) == 1
-                        tmp[request_id].append(sample_id)
+                    ## don't add multiple times for multiple messages deanonymized in the same request
+                    if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
                         dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
-                        tmp[request_id].append(dt.timestamp())
+                        sample = tmp['confirmed'][request_id][0]
+                        res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
+                        res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
+                        res['time_to_first_compromise'][sample] =  dt.timestamp()
+                        tmp['confirmed'][request_id].append(sample_id)
                 except KeyError:
-                    tmp[request_id] = [sample_id]
+                    tmp['confirmed'][request_id] = [sample_id]
 
             
     return res
@@ -93,7 +117,7 @@ if __name__ == "__main__":
     print(f'==============Now process the {args.in_file} file================')
     results = process_log(args.in_file)
     # add math.inf for uncompromised users:
-    for sampleid in results['nbr_messages_until_compromise'].keys():
+    for sampleid in range(0, args.samples):
         if sampleid not in results['time_to_first_compromise']:
             results['time_to_first_compromise'][sampleid] = math.inf
     if args.nbr_messages_until_compromise:
@@ -103,6 +127,7 @@ if __name__ == "__main__":
             print("How many messages do users send until deanonymized, on average?\
                     {0} messages".format(avg_msg))
             print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < math.inf])))
+            pdb.set_trace()
         except ZeroDivisionError:
             print(f"The simulation did not run enough to compromise any user -- something must have been wrong :)")
     with open(args.outname+".pickle", "wb") as outfile:

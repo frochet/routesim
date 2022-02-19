@@ -11,6 +11,7 @@ use rand::distributions::Uniform;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
 use std::hash::Hasher;
+use siphasher::sip128::Hasher128;
 
 #[derive(PartialEq)]
 pub enum AnonModelKind {
@@ -19,7 +20,7 @@ pub enum AnonModelKind {
 }
 
 pub trait UserModel<'a, T>:
-    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u64>)>
+    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>
 {
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
     /// Sample the next message timing for this
@@ -67,7 +68,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
     type RequestTime: Ord + PartialOrd + Eq + PartialEq;
     type RequestSize;
 
-    fn new<H: Hasher>(
+    fn new<H: Hasher + Hasher128>(
         state: &mut H,
         request_time: u64,
         request_size: isize,
@@ -83,7 +84,7 @@ pub trait UserRequestIterator: Iterator<Item = u64> {
 
     fn get_topos_idx(&self) -> u16;
 
-    fn get_requestid(&self) -> u64;
+    fn get_requestid(&self) -> u128;
 
     fn next_with_bandwidth(&mut self, bandwidth: Option<u32>) -> Option<u64>;
 }
@@ -98,7 +99,7 @@ pub struct UserModelInfo<'a, T> {
     #[allow(dead_code)]
     userid: u32,
     /// Mixnet topology
-    topos: &'a [TopologyConfig],
+    pub topos: &'a [TopologyConfig],
     /// Guards information
     guards: Option<Vec<&'a Mixnode>>,
     /// The guard we're currently using

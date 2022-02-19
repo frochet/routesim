@@ -120,7 +120,8 @@ impl Runable {
         path: IntoIter<&Mixnode>,
         is_malicious: bool,
         mailbox: Option<&MailBox>,
-        requestid: Option<u64>,
+        requestid: Option<u128>,
+        line_count: &mut u32,
     ) {
         let mut log: String;
         if let Some(rid) = requestid {
@@ -138,12 +139,19 @@ impl Runable {
             let mixid = mailbox.mixid;
             log.push_str(&format!("{mixid}"));
         }
-        log.push_str(&format!(" {is_malicious};"));
         if self.to_console {
+            log.push_str(&format!(" {is_malicious};"));
             println!("{log}");
+            *line_count = 0;
         } else {
             // does not flush for each path (i.e., println should be one system call per call. This
             // should not).
+            if *line_count == 1000 {
+                log.push_str(&format!(" {is_malicious}\n"));
+            }
+            else {
+                log.push_str(&format!(" {is_malicious};"));
+            }
             print!("{log}");
         }
     }
@@ -223,6 +231,7 @@ impl Runable {
             .zip(&mut usermodels)
             .for_each(|(user, mut usermodel)| {
                 let mut rng = thread_rng();
+                let mut line_count: u32 = 0;
                 // move this in the init part?
                 usermodel.set_limit(self.days_to_timestamp());
                 //let userinfo = &mut userinfos[user as usize];
@@ -232,7 +241,8 @@ impl Runable {
                     let strdate = Runable::format_message_timing(message_timing);
                     // write out the path for this message_timing
                     let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
-                    self.log_stdout(user, &strdate, path, is_malicious, mailbox, requestid);
+                    line_count += 1;
+                    self.log_stdout(user, &strdate, path, is_malicious, mailbox, requestid, &mut line_count);
                 }
                 // Drop the senders -- i.e., the receiver should not block when
                 // all messages are read
@@ -246,6 +256,7 @@ impl Runable {
             .filter(|usermodel| usermodel.model_kind() == AnonModelKind::BothPeers)
             .for_each(|usermodel| {
                 let mut rng = thread_rng();
+                let mut line_count: u32 = 0;
                 //XXX should we parallel iter on the channel recv()?
                 while let Some(request) = usermodel.get_request() {
                     // XXX From the request information, fetch the right guard
@@ -260,6 +271,7 @@ impl Runable {
                         let strdate = Runable::format_message_timing(message_timing);
                         // write out the path for this message_timing
                         let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
+                        line_count += 1;
                         self.log_stdout(
                             user,
                             &strdate,
@@ -267,6 +279,7 @@ impl Runable {
                             is_malicious,
                             mailbox,
                             Some(requestid),
+                            &mut line_count,
                         );
                     }
                 }
