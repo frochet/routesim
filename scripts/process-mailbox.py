@@ -42,7 +42,7 @@ def process_emails(fname):
     with open('time_data.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=4)
 
-    output_data = {'data': sorted(mesg_sizes)}
+    output_data = {'data': sorted(mesg_sizes), 'nbr_sampling': 0}
     with open('size_data.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=4)
 
