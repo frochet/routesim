@@ -11,7 +11,7 @@ def process_emails(fname):
     earliest = datetime.today()
     oldest = datetime(1970,1,1,0,0,0)
     smallest = 604800
-    start_of_week_alignment = 60*60*24*4 #Aligning to Monday from Thursday (1/1/1970)
+    start_of_week_alignment = 60*60*24*3 #Aligning to Monday from Thursday (1/1/1970)
     sending_times = []
     mesg_sizes = []
 
@@ -42,7 +42,7 @@ def process_emails(fname):
     with open('time_data.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=4)
 
-    output_data = {'data': sorted(mesg_sizes)}
+    output_data = {'data': sorted(mesg_sizes), 'nbr_sampling': 0}
     with open('size_data.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=4)
 

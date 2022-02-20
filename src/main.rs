@@ -7,7 +7,8 @@ mod simplemodel;
 mod userasyncmodel;
 mod usermodel;
 
-use clap::{AppSettings, Clap};
+//use clap::{AppSettings, Clap};
+use clap::Parser;
 use config::TopologyConfig;
 use histogram::Histogram;
 use rayon::prelude::*;
@@ -16,59 +17,59 @@ use simplemodel::*;
 use std::fs;
 use userasyncmodel::*;
 
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
 struct Opts {
     #[clap(
         short,
         long,
         required = true,
         parse(from_os_str),
-        about = "Directory containing Network configs containing mixes (and nothing else!)"
+        help = "Directory containing Network configs containing mixes (and nothing else!)"
     )]
     in_dir: std::path::PathBuf,
     #[clap(
         long,
         parse(from_os_str),
         default_value = "testfiles/timestamps.json",
-        about = "timestamps data used to build a histogram"
+        help = "timestamps data used to build a histogram"
     )]
     timestamps_h: std::path::PathBuf,
     #[clap(
         long,
         parse(from_os_str),
         default_value = "testfiles/sizes.json",
-        about = "Message sizes data used to build a histogram"
+        help = "Message sizes data used to build a histogram"
     )]
     sizes_h: std::path::PathBuf,
-    #[clap(long, default_value = "1", about = "Number of simulated days")]
+    #[clap(long, default_value = "1", help = "Number of simulated days")]
     days: u32,
     #[clap(
         short,
         long,
-        about = "User model for the simulation",
+        help = "User model for the simulation",
         default_value = "simple"
     )]
     usermod: String,
-    #[clap(long, default_value = "5000", about = "Number of users to simulate")]
+    #[clap(long, default_value = "5000", help = "Number of users to simulate")]
     users: u32,
     #[clap(
         short,
         long,
         default_value = "86401",
-        about = "Validity period for a given topologies"
+        help = "Validity period for a given topologies"
     )]
     epoch: u32,
     #[clap(
         short,
         long,
-        about = "Do we aim to print to console? Printing to console would display
+        help = "Do we aim to print to console? Printing to console would display
            one route per line"
     )]
     to_console: bool,
-    #[clap(short, about = "Do we desable guards?")]
+    #[clap(short, help = "Do we disable guards?")]
     disable_guards: bool,
-    #[clap(short, about = "The number of contacts", default_value = "10")]
+    #[clap(short, help = "The number of contacts", default_value = "10")]
     contacts: u32,
 }
 
