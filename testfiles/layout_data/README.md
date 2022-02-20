@@ -1,5 +1,5 @@
 There are four different mixnet construction methods: 
--rand_rand, 
+-rand_rand,
 -rand_binpacking(rand_bp)
 -bw_rand
 -hybrid

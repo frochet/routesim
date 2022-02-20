@@ -142,12 +142,12 @@ impl Runable {
         if self.to_console {
             log.push_str(&format!(" {is_malicious};"));
             println!("{log}");
-            *line_count = 0;
         } else {
             // does not flush for each path (i.e., println should be one system call per call. This
             // should not).
-            if *line_count == 1000 {
+            if *line_count == 10000 {
                 log.push_str(&format!(" {is_malicious}\n"));
+                *line_count = 0;
             }
             else {
                 log.push_str(&format!(" {is_malicious};"));
