@@ -63,17 +63,16 @@ def parse_log_routesim_async(filename):
                     request_compromised[request_id] = True
                     tmp['message'][sample_id][request_id] = counts[sample_id]['count']
                     tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
-                try:
+                    tmp['confirmed'][request_id] = [sample_id]
                     ## don't add multiple times for multiple messages deanonymized in the same request
-                    if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
-                        dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
-                        sample = tmp['confirmed'][request_id][0]
+                if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
+                    dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
+                    sample = tmp['confirmed'][request_id][0]
+                    if sample not in res['nbr_messages_until_compromise']:
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
                         res['time_to_first_compromise'][sample] =  dt.timestamp()
                         tmp['confirmed'][request_id].append(sample_id)
-                except KeyError:
-                    tmp['confirmed'][request_id] = [sample_id]
 
             
     return res
