@@ -11,7 +11,7 @@ use rand::seq::SliceRandom;
 
 use crate::mixnodes::mixnode::Mixnode;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MailBox {
     pub mixid: u32,
     pub is_malicious: bool,
