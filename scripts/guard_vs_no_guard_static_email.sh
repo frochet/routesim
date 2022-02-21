@@ -17,3 +17,25 @@ $ROUTESIM --timestamps-h ../testfiles/frochet/frochet_timestamps.json --sizes-h 
 $ROUTESIM --timestamps-h ../testfiles/frochet/frochet_timestamps.json --sizes-h ../testfiles/frochet/frochet_sizes.json --in-dir $LAYOUT -u email --users $SAMPLES --days $DAYS | sed 's/;/\n/g' > $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
 
 
+# Process results?
+
+python3 scripts/process_sim.py --in_file $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_withguard --outname $OUTDIR/processed_email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_withguard &
+python3 scripts/process_sim.py --in_file $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_noguard --outname $OUTDIR/processed_email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_noguard &
+
+# Tariq
+
+python3 scripts/process_sim.py --in_file $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard --outname $OUTDIR/processed_tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard &
+python3 scripts/process_sim.py --in_file $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard --outname $OUTDIR/processed_tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard &
+
+# Frochet
+
+python3 scripts/process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard &
+python3 scripts/process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
+
+# rm sim files
+rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_withguard
+rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_noguard
+rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
+rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
+rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
+rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
