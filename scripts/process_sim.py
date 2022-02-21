@@ -124,7 +124,7 @@ if __name__ == "__main__":
             #compute the avg for the number of message to send until compromise
             avg_msg = sum(results['nbr_messages_until_compromise'].values())/len(results['nbr_messages_until_compromise'])
             print("How many messages do users send until deanonymized, on average?\
-                    {0} messages".format(avg_msg))
+                    {} messages for {} compromised users".format(avg_msg, len(results['nbr_messages_until_compromise'])))
             print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < math.inf])))
             pdb.set_trace()
         except ZeroDivisionError:
