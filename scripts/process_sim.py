@@ -20,7 +20,7 @@ parser.add_argument("--outname", help="filename for the pickle storage")
 parser.add_argument("--format", default="simple", help="tell the parser the expected format") 
 parser.add_argument("--nbr_messages_until_compromise", action="store_true",
                     help="Display the number of messages until compromise, on average")
-parser.add_argument("--samples", type=int, help="Number of samples in file")
+parser.add_argument("--samples", required=True, type=int, help="Number of samples in file")
 
 def parse_log_routesim_async(filename):
     """
