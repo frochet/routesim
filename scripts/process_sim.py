@@ -68,11 +68,17 @@ def parse_log_routesim_async(filename):
                 if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
                     dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
                     sample = tmp['confirmed'][request_id][0]
-                    if sample not in res['nbr_messages_until_compromise']:
+                    timestamp = dt.timestamp()
+                    tmp['confirmed'][request_id].append(sample_id)
+                    if sample in res['nbr_messages_until_compromise'] and timestamp < res['time_to_first_compromise'][sample]:
+                        print("swap times")
+                        res['time_to_fist_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
-                        res['time_to_first_compromise'][sample] =  dt.timestamp()
-                        tmp['confirmed'][request_id].append(sample_id)
+                    else:
+                        res['time_to_fist_compromise'][sample] = timestamp
+                        res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
+                        res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
 
             
     return res
