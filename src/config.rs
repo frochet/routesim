@@ -50,9 +50,10 @@ impl TopologyConfig {
     }
 
     pub fn with_mailboxes(&mut self, tot_users: u32) -> &mut Self {
+        let mut rng = rand::thread_rng();
         (0..tot_users).for_each(|user| {
             self.mailboxes
-                .insert(user, MailBox::new(&self.layers[0..1]));
+                .insert(user, MailBox::new(&self.layers[0..=1], &mut rng));
         });
         self
     }

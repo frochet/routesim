@@ -20,7 +20,7 @@ parser.add_argument("--outname", help="filename for the pickle storage")
 parser.add_argument("--format", default="simple", help="tell the parser the expected format") 
 parser.add_argument("--nbr_messages_until_compromise", action="store_true",
                     help="Display the number of messages until compromise, on average")
-parser.add_argument("--samples", type=int, help="Number of samples in file")
+parser.add_argument("--samples", required=True, type=int, help="Number of samples in file")
 
 def parse_log_routesim_async(filename):
     """
@@ -63,17 +63,22 @@ def parse_log_routesim_async(filename):
                     request_compromised[request_id] = True
                     tmp['message'][sample_id][request_id] = counts[sample_id]['count']
                     tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
-                try:
+                    tmp['confirmed'][request_id] = [sample_id]
                     ## don't add multiple times for multiple messages deanonymized in the same request
-                    if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
-                        dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
-                        sample = tmp['confirmed'][request_id][0]
+                if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
+                    dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
+                    sample = tmp['confirmed'][request_id][0]
+                    timestamp = dt.timestamp()
+                    tmp['confirmed'][request_id].append(sample_id)
+                    if sample in res['nbr_messages_until_compromise'] and timestamp < res['time_to_first_compromise'][sample]:
+                        print("swap times")
+                        res['time_to_fist_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
-                        res['time_to_first_compromise'][sample] =  dt.timestamp()
-                        tmp['confirmed'][request_id].append(sample_id)
-                except KeyError:
-                    tmp['confirmed'][request_id] = [sample_id]
+                    else:
+                        res['time_to_fist_compromise'][sample] = timestamp
+                        res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
+                        res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
 
             
     return res
@@ -125,7 +130,7 @@ if __name__ == "__main__":
             #compute the avg for the number of message to send until compromise
             avg_msg = sum(results['nbr_messages_until_compromise'].values())/len(results['nbr_messages_until_compromise'])
             print("How many messages do users send until deanonymized, on average?\
-                    {0} messages".format(avg_msg))
+                    {} messages for {} compromised users".format(avg_msg, len(results['nbr_messages_until_compromise'])))
             print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < math.inf])))
             pdb.set_trace()
         except ZeroDivisionError:

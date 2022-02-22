@@ -96,7 +96,7 @@ impl Runable {
             if extendedhop.is_malicious {
                 mal_mix += 1
             }
-            mal_mix == PATH_LENGTH + 1
+            mal_mix == (PATH_LENGTH + 1)
         } else {
             mal_mix == PATH_LENGTH
         }

@@ -421,15 +421,20 @@ mod tests {
             .with_sizes_hist(s_sampler);
         let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
 
+        for usermodel in &usermodels {
+            let contacts: Vec<u32> = usermodel
+                .get_contacts()
+                .unwrap()
+                .iter()
+                .map(|c| *c)
+                .collect();
+            assert_eq!(contacts.len(), 3);
+            for c in contacts {
+                assert!(c != usermodel.get_userid());
+            }
+        }
         let usermodel = usermodels.get_mut(0).unwrap();
         usermodel.set_limit(limit);
-        let contacts: Vec<u32> = usermodel
-            .get_contacts()
-            .unwrap()
-            .iter()
-            .map(|c| *c)
-            .collect();
-        assert_eq!(contacts.len(), 3);
         if let Some((message_timing, _guard, _mailbox, _requestid)) = usermodel.next() {
             assert!(message_timing <= max);
         } else {
