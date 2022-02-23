@@ -71,12 +71,11 @@ def parse_log_routesim_async(filename):
                     timestamp = dt.timestamp()
                     tmp['confirmed'][request_id].append(sample_id)
                     if sample in res['nbr_messages_until_compromise'] and timestamp < res['time_to_first_compromise'][sample]:
-                        print("swap times")
-                        res['time_to_fist_compromise'][sample] = timestamp
+                        res['time_to_first_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
                     else:
-                        res['time_to_fist_compromise'][sample] = timestamp
+                        res['time_to_first_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
 
@@ -132,7 +131,6 @@ if __name__ == "__main__":
             print("How many messages do users send until deanonymized, on average?\
                     {} messages for {} compromised users".format(avg_msg, len(results['nbr_messages_until_compromise'])))
             print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < math.inf])))
-            pdb.set_trace()
         except ZeroDivisionError:
             print(f"The simulation did not run enough to compromise any user -- something must have been wrong :)")
     with open(args.outname+".pickle", "wb") as outfile:
