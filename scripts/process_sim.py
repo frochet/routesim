@@ -57,19 +57,20 @@ def parse_log_routesim_async(filename):
 
             if is_compromised:
                 if request_id not in request_compromised:
+                    dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
+                    timestamp = dt.timestamp()
                     if sample_id not in tmp['message']:
                         tmp['message'][sample_id] = {}
                         tmp['request'][sample_id] = {}
                     request_compromised[request_id] = True
                     tmp['message'][sample_id][request_id] = counts[sample_id]['count']
                     tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
-                    tmp['confirmed'][request_id] = [sample_id]
+                    tmp['confirmed'][request_id] = [sample_id, timestamp]
                     ## don't add multiple times for multiple messages deanonymized in the same request
                 if tmp['confirmed'][request_id][0] != sample_id:
-                    dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
                     sample = tmp['confirmed'][request_id][0]
-                    timestamp = dt.timestamp()
-                    if len(tmp['confirmed'][request_id]) == 1:
+                    timestamp = tmp['confirmed'][request_id][1]
+                    if len(tmp['confirmed'][request_id]) == 2:
                         tmp['confirmed'][request_id].append(sample_id)
                     if sample in res['nbr_messages_until_compromise'] and timestamp < res['time_to_first_compromise'][sample]:
                         res['time_to_first_compromise'][sample] = timestamp

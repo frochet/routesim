@@ -33,9 +33,9 @@ python3 process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOC
 python3 process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard --samples $SAMPLES --format async
 
 # rm sim files
-rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_withguard
-rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_noguard
-rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
-rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
-rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
-rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
+#rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_withguard
+#rm $OUTDIR/email_uoe_${SAMPLES}_${DAYS}_${EPOCH}_noguard
+#rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
+#rm $OUTDIR/tariq_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
+#rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_noguard
+#rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_${LAYOUT_BASENAME}_withguard
