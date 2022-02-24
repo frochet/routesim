@@ -65,16 +65,17 @@ def parse_log_routesim_async(filename):
                     tmp['request'][sample_id][request_id] = len(counts[sample_id]['request'])
                     tmp['confirmed'][request_id] = [sample_id]
                     ## don't add multiple times for multiple messages deanonymized in the same request
-                if tmp['confirmed'][request_id][0] != sample_id and len(tmp['confirmed'][request_id]) == 1:
+                if tmp['confirmed'][request_id][0] != sample_id:
                     dt = datetime.fromisoformat("{} {}".format(tab[0], tab[1]))
                     sample = tmp['confirmed'][request_id][0]
                     timestamp = dt.timestamp()
-                    tmp['confirmed'][request_id].append(sample_id)
+                    if len(tmp['confirmed'][request_id]) == 1:
+                        tmp['confirmed'][request_id].append(sample_id)
                     if sample in res['nbr_messages_until_compromise'] and timestamp < res['time_to_first_compromise'][sample]:
                         res['time_to_first_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
-                    else:
+                    elif sample not in res['nbr_messages_until_compromise']:
                         res['time_to_first_compromise'][sample] = timestamp
                         res['nbr_messages_until_compromise'][sample] = tmp['message'][sample][request_id]
                         res['nbr_emails_until_compromise'][sample] = tmp['request'][sample][request_id]
