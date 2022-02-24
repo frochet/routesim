@@ -13,10 +13,14 @@ import matplotlib.pyplot
 import math
 import argparse
 
+
 parser = argparse.ArgumentParser(description="Plot Time-to-first route compromised cdf of the routesim results")
 
+parser.add_argument("--time", type=bool, default=False)
+parser.add_argument("--count", type=bool, default=False)
 parser.add_argument("--data", nargs="+", help="datapath to the pickle file")
 parser.add_argument("--label", nargs="+", help="Line label in the same order than the data")
+
 
 ##### Plotting functions #####
 ## helper - cumulative fraction for y axis
@@ -74,9 +78,20 @@ def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
 if __name__ == "__main__":
     
     args = parser.parse_args()
-    data = []
     for datapath in args.data:
         with open(datapath, "rb") as file:
             simresults = pickle.load(file)
-            data.append([ float(x)/(60*60) for x in simresults['time_to_first_compromise'].values() ])
-    plot_cdf(data, args.label, "hours", "test", "best", "cdf_routesimresults")
+            if args.time:
+                data = []
+                data.append([ float(x)/(60*60) for x in simresults['time_to_first_compromise'].values() ])
+                plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults")
+            if args.count:
+                data = []
+                data.append([ float(x) for x in simresults['nbr_messages_until_compromise'].values() ])
+                plot_cdf(data, args.label, "Number of messages sent until compromise", "test", "best", "counts_cdf_routesimsresults")
+                if 'nbr_emails_until_compromise' in simresults:
+                    data = []
+                    data.append([ float(x) for x in simresults['nbr_emails_until_compromise'].values() ])
+                    plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults")
+            
+
