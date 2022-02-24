@@ -126,7 +126,7 @@ if __name__ == "__main__":
     MAX_TIME = 365*24*60*60*2
     for sampleid in range(0, args.samples):
         if sampleid not in results['time_to_first_compromise']:
-            results['time_to_first_compromise'][sampleid] = MAX_TIME
+        results['time_to_first_compromise'][sampleid] = MAX_TIME
     if args.nbr_messages_until_compromise:
         try:
             #compute the avg for the number of message to send until compromise
