@@ -1,3 +1,30 @@
+//! Simulating behavioural activity within a Mixnet
+//!
+//! This tool evaluates the probability of deanonymization through time,
+//! assuming some level of adversarial activity among the mixes.
+//!
+//! We expect to take in input various information to evaluate users' behaviour
+//! resistance to deanonymization. Among them, we have: the Mixnet
+//! [`topologies`](config::TopologyConfig), an
+//! [`histogram`](histogram::Histogram) defining how often the simulated user
+//! is interacting with the network (i.e., sending data), and a histogram that
+//! gives the distrution of sizes. Messages are packaged within payloads of
+//! size [`PAYLOAD_LENGTH`](config::PAYLOAD_LENGTH) and virtually "sent" within
+//! the mixnet.
+//!
+//! The simulator appliess a Monte Carlo method to draw paths and outputs path
+//! information for each message sent by each sample. As a matter of example,
+//! the "simple" model outputs lines such as:
+//! 
+//! ```  
+//! 1970-01-01 00:44:31 2538 570,260,1007, false
+//! ``` 
+//!
+//! containing the date, the sample id, the path (mix ids) and whether the
+//! route is fully compromised or not (i.e., whether the user selected
+//! PATH_LENGTH malicious mixes).
+//!
+
 mod config;
 mod histogram;
 mod mailbox;
@@ -7,7 +34,6 @@ mod simplemodel;
 mod userasyncmodel;
 mod usermodel;
 
-//use clap::{AppSettings, Clap};
 use clap::Parser;
 use config::TopologyConfig;
 use histogram::Histogram;
@@ -88,6 +114,8 @@ fn main() {
         .into_par_iter()
         .map(|filename| config::load(filename, opts.users))
         .collect();
+    // We need sorting the topologies for accessing the right one depending
+    // on the current epoch
     topologies.sort_by(|a, b| a.epoch.cmp(&b.epoch));
     let n = topologies.len();
     
@@ -114,6 +142,8 @@ fn main() {
 
     match &opts.usermod[..] {
         "simple" => {
+
+            // XXX todo! makes sync models accept histograms 
             let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
         }
@@ -130,6 +160,7 @@ fn main() {
                 .with_timestamps_hist(timestamps_h)
                 .with_sizes_hist(sizes_h);
             let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+            // run the simulation then exit main.
             runner.run(usermodels);
         }
         _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),

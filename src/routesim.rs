@@ -36,6 +36,7 @@ pub struct Runable {
 }
 
 impl Runable {
+    /// Creates a new simulation to run.
     pub fn new(
         users: u32,
         configs: Vec<TopologyConfig>,
@@ -52,17 +53,17 @@ impl Runable {
             ..Default::default()
         }
     }
-
+    /// Do we enable guards for this simulation?
     pub fn with_guards(&mut self) -> &mut Self {
         self.use_guards = true;
         self
     }
-
+    /// Do we print results to consol?
     pub fn with_console(&mut self) -> &mut Self {
         self.to_console = true;
         self
     }
-
+    /// Do we use a timestamp histogram?
     pub fn with_timestamps_hist(&mut self, h: Histogram) -> &mut Self {
         self.timestamps_h = Some(h);
         self
@@ -72,7 +73,10 @@ impl Runable {
         self.sizes_h = Some(h);
         self
     }
-
+    /// Get a random path from the right mixnet configuration.
+    ///
+    /// A guard is optionally given. Guards are a set of mixnet nodes chosen to change as few as
+    /// possible
     #[inline]
     pub fn sample_path<'a>(
         &'a self,
@@ -84,7 +88,7 @@ impl Runable {
     }
 
     /// Check whether the three mixnode in path are compromised.
-    /// return true if they are, false otherwise.
+    /// Returns true if they are, false otherwise.
     pub fn is_path_malicious(&self, path: &[&Mixnode], mailbox: Option<&MailBox>) -> bool {
         let mut mal_mix = 0;
         for i in 0..PATH_LENGTH {
@@ -102,6 +106,8 @@ impl Runable {
         }
     }
 
+    /// Format the message's sending time as a naive time
+    #[inline]
     fn format_message_timing(timing: u64) -> String {
         let dt = NaiveDateTime::from_timestamp(timing as i64, 0);
         dt.format("%Y-%m-%d %H:%M:%S").to_string()
