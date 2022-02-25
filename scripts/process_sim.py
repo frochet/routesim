@@ -123,17 +123,20 @@ if __name__ == "__main__":
     print(f'==============Now process the {args.in_file} file================')
     results = process_log(args.in_file)
     # add math.inf for uncompromised users:
-    MAX_TIME = 365*24*60*60*2
     for sampleid in range(0, args.samples):
         if sampleid not in results['time_to_first_compromise']:
-        results['time_to_first_compromise'][sampleid] = MAX_TIME
+            results['time_to_first_compromise'][sampleid] = math.inf
+            results['nbr_messages_until_compromise'][sampleid] = math.inf
+            if 'nbr_emails_until_compromise' in results:
+                results['nbr_emails_until_compromise'][sampleid] = math.inf
+
     if args.nbr_messages_until_compromise:
         try:
             #compute the avg for the number of message to send until compromise
             avg_msg = sum(results['nbr_messages_until_compromise'].values())/len(results['nbr_messages_until_compromise'])
             print("How many messages do users send until deanonymized, on average?\
                     {} messages for {} compromised users".format(avg_msg, len(results['nbr_messages_until_compromise'])))
-            print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < MAX_TIME])))
+            print("{} sample have been compromised".format(len([x for x in results['time_to_first_compromise'].values() if x < math.inf])))
         except ZeroDivisionError:
             print(f"The simulation did not run enough to compromise any user -- something must have been wrong :)")
     with open(args.outname+".pickle", "wb") as outfile:
