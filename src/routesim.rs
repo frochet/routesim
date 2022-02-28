@@ -166,15 +166,22 @@ impl Runable {
     where
         T: UserModel<'a, U>,
     {
+        let die = Uniform::from(0..self.users);
         let usermodels: Vec<_> = (0..self.users)
             .map(|user| {
-                T::new(
+                let mut model = T::new(
                     self.users,
                     self.epoch,
                     UserModelInfo::new(user, &self.configs, self.epoch, self.use_guards),
-                )
+                );
+                if self.timestamps_h.is_some() {
+                    model.set_contacts(self.contacts, &die);
+                    model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
+                    model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
+                }
+                model
             })
-            .collect();
+        .collect();
         usermodels
     }
 
@@ -199,7 +206,7 @@ impl Runable {
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 model
             })
-            .collect();
+        .collect();
         let mut senders: Vec<Sender<U>> = Vec::with_capacity(self.users as usize);
         for i in 0..self.users {
             // let's create one receiver per user, and give

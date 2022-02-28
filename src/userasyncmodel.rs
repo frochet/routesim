@@ -1,11 +1,11 @@
+//! This is expected to contain a generic model for asynchronous message sending and fetching
+//! with both sender and recipient being anonymous.
+//!
+//! E.g., sending email-like data within a mixnet; or chat messages
+
 use crate::config::PAYLOAD_SIZE;
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
-/**
- * This is expected to contain a generic model for asynchronous message sending and fetching
- *
- * E.g., sending email-like data within a mixnet; or chat messages
- */
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::{Receiver, Sender};
@@ -67,7 +67,6 @@ where
 
     fn with_timestamp_sampler(&mut self, timestamp_sampler: &'a Histogram) -> &mut Self {
         self.timestamp_sampler = Some(timestamp_sampler);
-        //self.init_list();
         self
     }
 
@@ -92,12 +91,6 @@ where
     #[inline]
     fn get_request(&self) -> Option<T> {
         self.uinfo.get_request()
-    }
-
-    #[inline]
-    fn get_next_message_timing(&mut self) -> u64 {
-        self.current_time += 1000;
-        self.current_time
     }
 
     #[inline]

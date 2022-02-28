@@ -29,7 +29,6 @@ pub trait UserModel<'a, T>:
     fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode>;
     fn get_userid(&self) -> u32;
     fn get_limit(&self) -> u64;
-    fn get_next_message_timing(&mut self) -> u64;
     fn get_request(&self) -> Option<T> {
         None
     }

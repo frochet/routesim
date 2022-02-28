@@ -48,12 +48,6 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
     fn get_userid(&self) -> u32 {
         self.uinfo.get_userid()
     }
-    /// We simply increase the current time with the sampled value
-    fn get_next_message_timing(&mut self) -> u64 {
-        self.current_time += self.die.sample(&mut self.rng);
-        self.current_time
-    }
-
     fn get_current_time(&self) -> u64 {
         self.current_time
     }
@@ -76,6 +70,14 @@ impl<'a, T> UserModel<'a, T> for SimpleSynchronousModel<'a, T> {
     ///// Update any client information (e.g., guards), relative to the current timing
     fn update(&mut self, message_timing: u64) {
         self.uinfo.update(message_timing, &mut self.rng);
+    }
+}
+
+impl<T> SimpleSynchronousModel<'_, T> {
+    /// We simply increase the current time with the sampled value
+    fn get_next_message_timing(&mut self) -> u64 {
+        self.current_time += self.die.sample(&mut self.rng);
+        self.current_time
     }
 }
 

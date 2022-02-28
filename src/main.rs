@@ -30,9 +30,10 @@ mod histogram;
 mod mailbox;
 mod mixnodes;
 mod routesim;
+mod usermodel;
 mod simplemodel;
 mod userasyncmodel;
-mod usermodel;
+mod loopixemailmodel;
 
 use clap::Parser;
 use config::TopologyConfig;
@@ -42,6 +43,7 @@ use routesim::Runable;
 use simplemodel::*;
 use std::fs;
 use userasyncmodel::*;
+use loopixemailmodel::LoopixEmailModel;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -147,7 +149,7 @@ fn main() {
             let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
         }
-        "email" => {
+        "email"|"loopixemail" => {
             // try to open timstamps_h and sizes_h. Panic if it fails.
             let timestamps_s =
                 std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
@@ -159,10 +161,16 @@ fn main() {
             runner
                 .with_timestamps_hist(timestamps_h)
                 .with_sizes_hist(sizes_h);
-            let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
-            // run the simulation then exit main.
-            runner.run(usermodels);
+            if &opts.usermod[..] == "email" {
+                let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+                runner.run(usermodels);
+            }
+            else {
+                let usermodels = runner.init_sync::<LoopixEmailModel<UserRequest>, UserRequest>();
+                runner.run(usermodels);
+            }
         }
-        _ => panic!("We don't have that usermodel: {}", &opts.usermod[..]),
+        _ => panic!("We don't have that usermodel: {}. We accept 'simple', 'loopixemail' and\
+                    'email'", &opts.usermod[..]),
     };
 }
