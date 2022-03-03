@@ -57,7 +57,7 @@ def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
             x, y = getcdf(data_points, shown_percentile)
             matplotlib.pyplot.plot(x, y, line_styles[i % len(line_styles)],
                 label = line_label,
-                linewidth = 2,
+                linewidth = 3,
                 markevery = int(math.floor(len(x)/num_markers)))
             i += 1
         matplotlib.pyplot.legend(loc=location, fontsize = fontsize)
@@ -66,7 +66,8 @@ def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
         matplotlib.pyplot.plot(x, y)
     matplotlib.pyplot.xlim(xmin=0.0)
     matplotlib.pyplot.ylim(ymin=0.0)
-    matplotlib.pyplot.yticks(numpy.arange(0, 1.1, 0.1))
+    matplotlib.pyplot.yticks(numpy.arange(0, 1.1, 0.2), fontsize=fontsize)
+    matplotlib.pyplot.xticks(fontsize=fontsize)
     matplotlib.pyplot.xlabel(xlabel, fontsize=fontsize)
     matplotlib.pyplot.ylabel('Cumulative probability', fontsize=fontsize)
     matplotlib.pyplot.grid()
@@ -83,6 +84,7 @@ if __name__ == "__main__":
         sys.exit(-1)
     data = []
     figsize = (6.4, 3.8)
+    fontsize=18
     for datapath in args.data:
         with open(datapath, "rb") as file:
             simresults = pickle.load(file)
@@ -94,7 +96,7 @@ if __name__ == "__main__":
                 else:
                     data.append([ float(x) for x in simresults['nbr_messages_until_compromise'].values() ])
     if args.time:
-        plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults", figsize=figsize)
+        plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults", figsize=figsize, fontsize=fontsize)
     elif args.count:
-        plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults", figsize=figsize)
+        plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults", figsize=figsize, fontsize=fontsize)
 
