@@ -41,7 +41,7 @@ def getcdf(data, shownpercentile=0.99):
     return (x, y)
 
 def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
-    figsize = None, fontsize = 'small'):
+    figsize = None, fontsize = 'large'):
     """Saves cdf for given lines in out_name."""
     fig = matplotlib.pyplot.figure(figsize = figsize)
     line_styles = ['-v', '-o', '-s', '-*', '-x', '-D', '-+']
@@ -82,6 +82,7 @@ if __name__ == "__main__":
         print("--count or --time is missing")
         sys.exit(-1)
     data = []
+    figsize = (6.4, 3.8)
     for datapath in args.data:
         with open(datapath, "rb") as file:
             simresults = pickle.load(file)
@@ -93,7 +94,7 @@ if __name__ == "__main__":
                 else:
                     data.append([ float(x) for x in simresults['nbr_messages_until_compromise'].values() ])
     if args.time:
-        plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults")
+        plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults", figsize=figsize)
     elif args.count:
-        plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults")
+        plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults", figsize=figsize)
 
