@@ -64,7 +64,7 @@ def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
     else:
         x, y = getcdf(lines)
         matplotlib.pyplot.plot(x, y)
-    matplotlib.pyplot.xlim(xmin=0.0)
+    #matplotlib.pyplot.xlim(xmin=0.0)
     matplotlib.pyplot.ylim(ymin=0.0)
     matplotlib.pyplot.yticks(numpy.arange(0, 1.1, 0.2), fontsize=fontsize)
     matplotlib.pyplot.xticks(fontsize=fontsize)
@@ -97,6 +97,9 @@ if __name__ == "__main__":
                     data.append([ float(x) for x in simresults['nbr_messages_until_compromise'].values() ])
     if args.time:
         plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults", figsize=figsize, fontsize=fontsize)
-    elif args.count:
+    elif args.count and 'nbr_emails_until_compromise' in simresults:
         plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults", figsize=figsize, fontsize=fontsize)
+    else:
+        plot_cdf(data, args.label, "Number of messages sent until compromise", "test", "best", "counts_messages_cdf_routesimsresults", figsize=figsize, fontsize=fontsize)
+
 

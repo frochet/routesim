@@ -101,7 +101,8 @@ def parse_log_routesim_sync(filename):
             is_compromised = strtobool(tab[4])
             # avoid considering a "if" branch when the key exist.
             try:
-                res['nbr_messages_until_compromise'][sample_id] += 1
+                if sample_id not in res['time_to_first_compromise']:
+                    res['nbr_messages_until_compromise'][sample_id] += 1
             except KeyError:
                 res['nbr_messages_until_compromise'][sample_id] = 0
             if is_compromised and sample_id not in res['time_to_first_compromise']:
