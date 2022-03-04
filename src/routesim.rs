@@ -154,8 +154,7 @@ impl Runable {
             if *line_count == 10000 {
                 log.push_str(&format!(" {is_malicious}\n"));
                 *line_count = 0;
-            }
-            else {
+            } else {
                 log.push_str(&format!(" {is_malicious};"));
             }
             print!("{log}");
@@ -181,7 +180,7 @@ impl Runable {
                 }
                 model
             })
-        .collect();
+            .collect();
         usermodels
     }
 
@@ -206,7 +205,7 @@ impl Runable {
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 model
             })
-        .collect();
+            .collect();
         let mut senders: Vec<Sender<U>> = Vec::with_capacity(self.users as usize);
         for i in 0..self.users {
             // let's create one receiver per user, and give
@@ -255,7 +254,15 @@ impl Runable {
                     // write out the path for this message_timing
                     let is_malicious = self.is_path_malicious(path.as_slice(), mailbox);
                     line_count += 1;
-                    self.log_stdout(user, &strdate, path, is_malicious, mailbox, requestid, &mut line_count);
+                    self.log_stdout(
+                        user,
+                        &strdate,
+                        path,
+                        is_malicious,
+                        mailbox,
+                        requestid,
+                        &mut line_count,
+                    );
                 }
                 // Drop the senders -- i.e., the receiver should not block when
                 // all messages are read

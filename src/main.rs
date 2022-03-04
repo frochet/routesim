@@ -15,10 +15,10 @@
 //! The simulator appliess a Monte Carlo method to draw paths and outputs path
 //! information for each message sent by each sample. As a matter of example,
 //! the "simple" model outputs lines such as:
-//! 
+//!
 //! ```  
 //! 1970-01-01 00:44:31 2538 570,260,1007, false
-//! ``` 
+//! ```
 //!
 //! containing the date, the sample id, the path (mix ids) and whether the
 //! route is fully compromised or not (i.e., whether the user selected
@@ -27,23 +27,23 @@
 
 mod config;
 mod histogram;
+mod loopixemailmodel;
 mod mailbox;
 mod mixnodes;
 mod routesim;
-mod usermodel;
 mod simplemodel;
 mod userasyncmodel;
-mod loopixemailmodel;
+mod usermodel;
 
 use clap::Parser;
 use config::TopologyConfig;
 use histogram::Histogram;
+use loopixemailmodel::LoopixEmailModel;
 use rayon::prelude::*;
 use routesim::Runable;
 use simplemodel::*;
 use std::fs;
 use userasyncmodel::*;
-use loopixemailmodel::LoopixEmailModel;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -120,12 +120,12 @@ fn main() {
     // on the current epoch
     topologies.sort_by(|a, b| a.epoch.cmp(&b.epoch));
     let n = topologies.len();
-    
+
     let mut epoch = opts.epoch;
     // check whether the parameters days; config and epoch make sense
     if epoch * n as u32 <= opts.days * 24 * 60 * 60 {
         eprintln!("Make sure you have enough configuration files, and that the epoch and days value make sense!");
-        epoch = 86400*opts.days + 1;
+        epoch = 86400 * opts.days + 1;
         eprintln!("Setting epoch to {epoch}. Maybe you want to change that");
     }
     // we should sample users in a valid range
@@ -144,12 +144,11 @@ fn main() {
 
     match &opts.usermod[..] {
         "simple" => {
-
-            // XXX todo! makes sync models accept histograms 
+            // XXX todo! makes sync models accept histograms
             let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
             runner.run(usermodels);
         }
-        "email"|"loopixemail" => {
+        "email" | "loopixemail" => {
             // try to open timstamps_h and sizes_h. Panic if it fails.
             let timestamps_s =
                 std::fs::read_to_string(&opts.timestamps_h).expect("Couldn't open the file");
@@ -164,13 +163,15 @@ fn main() {
             if &opts.usermod[..] == "email" {
                 let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
                 runner.run(usermodels);
-            }
-            else {
+            } else {
                 let usermodels = runner.init_sync::<LoopixEmailModel<UserRequest>, UserRequest>();
                 runner.run(usermodels);
             }
         }
-        _ => panic!("We don't have that usermodel: {}. We accept 'simple', 'loopixemail' and\
-                    'email'", &opts.usermod[..]),
+        _ => panic!(
+            "We don't have that usermodel: {}. We accept 'simple', 'loopixemail' and\
+                    'email'",
+            &opts.usermod[..]
+        ),
     };
 }

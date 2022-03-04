@@ -10,8 +10,8 @@ use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use rand::distributions::Uniform;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as HashMap;
-use std::hash::Hasher;
 use siphasher::sip128::Hasher128;
+use std::hash::Hasher;
 
 #[derive(PartialEq)]
 pub enum AnonModelKind {

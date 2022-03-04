@@ -1,3 +1,4 @@
+use crate::mixnodes::mixnode::Mixnode;
 /**
  * We assume a mixnet protocol in which each user can populate
  * a mailbox information to be asynchronously reachable
@@ -9,7 +10,6 @@
  */
 use rand::seq::SliceRandom;
 use rand::Rng;
-use crate::mixnodes::mixnode::Mixnode;
 
 #[derive(Clone, Debug)]
 pub struct MailBox {

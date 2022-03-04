@@ -2,8 +2,8 @@
 //!
 //! We assume for the worst-case analysis that user gateways are compromised.
 
-use crate::mailbox::MailBox;
 use crate::histogram::Histogram;
+use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
 use crossbeam_channel::Receiver;
@@ -13,7 +13,6 @@ use rand::SeedableRng;
 use siphasher::sip128::SipHasher;
 
 pub struct LoopixEmailModel<'a, T> {
-
     current_time: u64,
 
     /// list of requests for the current period
@@ -36,12 +35,10 @@ pub struct LoopixEmailModel<'a, T> {
     hasher: SipHasher,
 }
 
-
 impl<'a, T> UserModel<'a, T> for LoopixEmailModel<'a, T>
 where
     T: UserRequestIterator + Ord + PartialOrd + Eq + PartialEq,
 {
-
     fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
         let hasher = SipHasher::new();
@@ -93,12 +90,12 @@ where
     fn set_limit(&mut self, limit: u64) {
         self.limit = limit
     }
-    
+
     /// does not use channels
     fn with_receiver(&mut self, _r: Receiver<T>) -> &mut Self {
         self
     }
-    
+
     fn set_contacts(&mut self, contacts: u32, die: &Uniform<u32>) {
         self.contact_sampler = Some(Uniform::from(0..contacts));
         let mut count = contacts;
@@ -124,7 +121,6 @@ impl<'a, T> LoopixEmailModel<'a, T>
 where
     T: UserRequestIterator + PartialEq + Eq + PartialOrd + Ord,
 {
-
     fn build_req(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];

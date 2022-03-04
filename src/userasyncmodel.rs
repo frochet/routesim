@@ -12,9 +12,8 @@ use crossbeam_channel::{Receiver, Sender};
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
-use std::hash::{Hash, Hasher};
 use siphasher::sip128::{Hasher128, SipHasher};
-
+use std::hash::{Hash, Hasher};
 
 pub struct SimpleEmailModel<'a, T> {
     _tot_users: u32,
@@ -181,7 +180,8 @@ where
         if self.current_req.is_none() {
             return None;
         }
-        let mailbox = self.uinfo.topos[self.current_req.as_ref().unwrap().get_topos_idx() as usize].get_mailbox(self.current_req.as_ref().unwrap().get_peers().1);
+        let mailbox = self.uinfo.topos[self.current_req.as_ref().unwrap().get_topos_idx() as usize]
+            .get_mailbox(self.current_req.as_ref().unwrap().get_peers().1);
         //let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
         let req = self.current_req.as_mut().unwrap();
         let reqid = req.get_requestid();
