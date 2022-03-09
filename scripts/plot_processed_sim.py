@@ -85,18 +85,41 @@ if __name__ == "__main__":
     data = []
     figsize = (6.4, 3.8)
     fontsize=18
+    max_value = 0
+    for datapath in args.data:
+        with open(datapath, "rb") as file:
+            simresults = pickle.load(file)
+            this_max_value = max(filter(lambda elem: elem < math.inf, simresults['time_to_first_compromise'].values()))
+            if max_value < this_max_value:
+                max_value = this_max_value
+    #within one week
+    if max_value <= 7*24*60*60:
+        divider = 60*60
+        unit = "[hours]"
+    #within one month
+    elif max_value <= 30*24*60*60:
+        divider = 24*60*60
+        unit = "[days]"
+    #within one year
+    elif max_value <= 12*30*24*60*60:
+        divider = 7*24*60*60
+        unit = "[weeks]"
+    else:
+        divider = 30*24*60*60
+        unit = "[months]"
+            
     for datapath in args.data:
         with open(datapath, "rb") as file:
             simresults = pickle.load(file)
             if args.time:
-                data.append([ float(x)/(60*60) for x in simresults['time_to_first_compromise'].values() ])
+                data.append([ float(x)/divider for x in simresults['time_to_first_compromise'].values() ])
             elif args.count:
                 if 'nbr_emails_until_compromise' in simresults:
                     data.append([ float(x) for x in simresults['nbr_emails_until_compromise'].values() ])
                 else:
                     data.append([ float(x) for x in simresults['nbr_messages_until_compromise'].values() ])
     if args.time:
-        plot_cdf(data, args.label, "time to first compromise [hours]", "test", "best", "ttfc_cdf_routesimresults", figsize=figsize, fontsize=fontsize)
+        plot_cdf(data, args.label, "time to first compromise "+unit, "test", "best", "ttfc_cdf_routesimresults", figsize=figsize, fontsize=fontsize)
     elif args.count and 'nbr_emails_until_compromise' in simresults:
         plot_cdf(data, args.label, "Number of emails sent until compromise", "test", "best", "counts_emails_cdf_routesimsresults", figsize=figsize, fontsize=fontsize)
     else:

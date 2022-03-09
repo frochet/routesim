@@ -33,7 +33,7 @@ $ROUTESIM --timestamps-h ../testfiles/frochet/frochet_timestamps.json --sizes-h 
 
 
 python3 process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_noguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_noguard --samples $SAMPLES --format async &
-python3 process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}__withguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_withguard --samples $SAMPLES --format async
+python3 process_sim.py --in_file $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_withguard --outname $OUTDIR/processed_frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_withguard --samples $SAMPLES --format async
 
 # rm sim files
 rm $OUTDIR/frochet_email_${SAMPLES}_${DAYS}_${EPOCH}_noguard
