@@ -166,7 +166,6 @@ where
             return None;
         }
         let topo_idx: u16 = (req_timestamp / self.epoch as u64) as u16;
-        eprintln!("topo_idx: {topo_idx}");
         let req = T::new(
             &mut self.hasher,
             req_timestamp,
