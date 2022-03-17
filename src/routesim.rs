@@ -4,6 +4,7 @@ use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
 use crate::usermodel::*;
+use crate::userasyncmodel::UserModelIterator;
 use chrono::NaiveDateTime;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender;
@@ -161,9 +162,9 @@ impl Runable {
         }
     }
 
-    pub fn init_sync<'a, T, U>(&'a self) -> Vec<T>
+    pub fn init_sync<'a, T>(&'a self) -> Vec<UserModelIterator<T>>
     where
-        T: UserModel<'a, U>,
+        T: UserModel<'a>,
     {
         let die = Uniform::from(0..self.users);
         let usermodels: Vec<_> = (0..self.users)
@@ -178,16 +179,15 @@ impl Runable {
                     model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                     model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 }
-                model
+                UserModelIterator{ 0:model }
             })
             .collect();
         usermodels
     }
 
-    pub fn init<'a, T, U>(&'a self) -> Vec<T>
+    pub fn init<'a, T>(&'a self) -> Vec<UserModelIterator<T>>
     where
-        T: UserModel<'a, U>,
-        U: UserRequestIterator,
+        T: UserModel<'a>,
     {
         // create first all model info
         // add the mpc channels
@@ -203,10 +203,10 @@ impl Runable {
                 model.set_contacts(self.contacts, &die);
                 model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
-                model
+                UserModelIterator { 0:model }
             })
             .collect();
-        let mut senders: Vec<Sender<U>> = Vec::with_capacity(self.users as usize);
+        let mut senders: Vec<Sender<T::URequest>> = Vec::with_capacity(self.users as usize);
         for i in 0..self.users {
             // let's create one receiver per user, and give
             // one sender to every other users
@@ -232,10 +232,10 @@ impl Runable {
     /// Run the simulation -- this function should output
     /// route taken for each user each time the user requires to send
     /// a message, which depends of the user model through time.
-    pub fn run<'a, T, U>(&'a self, mut usermodels: Vec<T>)
+    pub fn run<'a, T>(&'a self, mut usermodels: Vec<UserModelIterator<T>>)
     where
-        T: UserModel<'a, U> + Send,
-        U: UserRequestIterator,
+        T: UserModel<'a> + Send,
+        T: RequestHandler<Out=(u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
     {
         // for_each should block until they all completed
         (0..self.users)

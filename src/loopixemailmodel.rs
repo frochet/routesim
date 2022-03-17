@@ -35,10 +35,12 @@ pub struct LoopixEmailModel<'a, T> {
     hasher: SipHasher,
 }
 
-impl<'a, T> UserModel<'a, T> for LoopixEmailModel<'a, T>
+impl<'a, T> UserModel<'a> for LoopixEmailModel<'a, T>
 where
-    T: UserRequestIterator + Ord + PartialOrd + Eq + PartialEq,
+    T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
+    type URequest = T;
+
     fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
         let hasher = SipHasher::new();
@@ -55,6 +57,11 @@ where
             rng,
             hasher,
         }
+    }
+
+    #[inline]
+    fn set_current_request(&mut self, req: Option<Self::URequest>) {
+        self.current_req = req;
     }
 
     fn with_timestamp_sampler(&mut self, timestamp_sampler: &'a Histogram) -> &mut Self {
@@ -91,6 +98,14 @@ where
         self.limit = limit
     }
 
+    fn get_reqlist(&self) -> &Vec<Self::URequest> {
+        &self.req_list
+    }
+
+    fn get_reqlist_mut(&mut self) -> &mut Vec<Self::URequest> {
+        &mut self.req_list
+    }
+
     /// does not use channels
     fn with_receiver(&mut self, _r: Receiver<T>) -> &mut Self {
         self
@@ -115,12 +130,6 @@ where
     fn update(&mut self, message_timing: u64) {
         self.uinfo.update(message_timing, &mut self.rng);
     }
-}
-
-impl<'a, T> LoopixEmailModel<'a, T>
-where
-    T: UserRequestIterator + PartialEq + Eq + PartialOrd + Ord,
-{
     fn build_req(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
@@ -141,9 +150,16 @@ where
         );
         Some(req)
     }
+}
+
+impl<'a, T> RequestHandler for LoopixEmailModel<'a, T>
+where
+    T: UserRequestIterator + Clone + PartialEq + Eq + PartialOrd + Ord,
+{
+    type Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
     #[inline]
-    fn fetch_next(&mut self) -> Option<<LoopixEmailModel<'a, T> as Iterator>::Item> {
+    fn fetch_next(&mut self) -> Option<Self::Out> {
         if self.current_req.is_none() {
             return None;
         }
@@ -181,36 +197,3 @@ where
     }
 }
 
-impl<'a, T> Iterator for LoopixEmailModel<'a, T>
-where
-    T: UserRequestIterator + Eq + Ord + PartialEq + PartialOrd,
-{
-    type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.req_list.is_empty() {
-            self.init_list();
-        }
-        let next = self.fetch_next();
-        match next {
-            Some(item) => Some(item),
-            // Three possible cases:
-            // 1) we consumed all requests, which mean
-            // we can re-fill the list providing that the simulation shouldn't halt
-            // 2) the list is not empty, and we're not over the limit. Let's pop and consume
-            // the next request
-            // 3) the is not empty but we're over the limit. In that case, fetch_next() is
-            //    expected to return None
-            // So eventually we can handle the three cases with a if {} else {}
-            None => {
-                if self.req_list.is_empty() && self.current_time < self.limit {
-                    self.init_list();
-                    self.fetch_next()
-                } else {
-                    self.current_req = self.req_list.pop();
-                    self.fetch_next()
-                }
-            }
-        }
-    }
-}

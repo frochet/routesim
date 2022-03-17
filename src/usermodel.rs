@@ -19,17 +19,29 @@ pub enum AnonModelKind {
     BothPeers,
 }
 
-pub trait UserModel<'a, T>:
-    Iterator<Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>
+pub trait RequestHandler {
+    type Out;
+    
+    fn init_list(&mut self) {}
+    fn fetch_next(&mut self) -> Option<Self::Out>;
+}
+
+pub trait UserModel<'a>
 {
-    fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self;
+    type URequest: UserRequestIterator + Clone + Eq + Ord + PartialEq + PartialOrd;
+
+    fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, Self::URequest>) -> Self;
     /// Sample the next message timing for this
     /// user model
     fn get_current_time(&self) -> u64;
     fn get_guard_for(&self, topo_idx: usize) -> Option<&'a Mixnode>;
     fn get_userid(&self) -> u32;
     fn get_limit(&self) -> u64;
-    fn get_request(&self) -> Option<T> {
+    fn build_req(&mut self) -> Option<Self::URequest>;
+    fn get_reqlist(&self) -> &Vec<Self::URequest>;
+    fn set_current_request(&mut self, _req: Option<Self::URequest>) {}
+    fn get_reqlist_mut(&mut self) -> &mut Vec<Self::URequest>;
+    fn get_request(&self) -> Option<Self::URequest> {
         None
     }
     fn get_mailbox(&self, _topo_idx: usize) -> Option<&'a MailBox> {
@@ -41,14 +53,14 @@ pub trait UserModel<'a, T>:
     }
     fn set_limit(&mut self, limit: u64);
     fn model_kind(&self) -> AnonModelKind;
-    fn with_receiver(&mut self, r: Receiver<T>) -> &mut Self;
+    fn with_receiver(&mut self, r: Receiver<Self::URequest>) -> &mut Self;
     fn with_timestamp_sampler(&mut self, _timestamp_sampler: &'a Histogram) -> &mut Self {
         self
     }
     fn with_size_sampler(&mut self, _size_sampler: &'a Histogram) -> &mut Self {
         self
     }
-    fn add_sender(&mut self, _user: u32, _s: Sender<T>) {}
+    fn add_sender(&mut self, _user: u32, _s: Sender<Self::URequest>) {}
     fn drop_senders(&mut self) {}
 
     ///// update the client according to the current timing and the network
