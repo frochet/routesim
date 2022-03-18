@@ -196,4 +196,3 @@ where
         self.current_time += t_sampler.period + 1;
     }
 }
-

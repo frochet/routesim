@@ -6,7 +6,9 @@ use crate::mixnodes::mixnode::Mixnode;
  * Currently does not send the message to any simulated user in particular, and it is one message
  * at a time.
  */
-use crate::usermodel::{AnonModelKind, UserModel, UserModelInfo, UserRequestIterator, RequestHandler};
+use crate::usermodel::{
+    AnonModelKind, RequestHandler, UserModel, UserModelInfo, UserRequestIterator,
+};
 use crossbeam_channel::Receiver;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
@@ -31,9 +33,8 @@ pub struct SimpleSynchronousModel<'a, T> {
 /// interval
 impl<'a, T> UserModel<'a> for SimpleSynchronousModel<'a, T>
 where
-    T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq 
+    T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
-
     type URequest = T;
 
     fn new(_tot_users: u32, _epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
@@ -99,9 +100,9 @@ impl<T> SimpleSynchronousModel<'_, T> {
     }
 }
 
-impl<'a,T> RequestHandler for SimpleSynchronousModel<'a, T>
+impl<'a, T> RequestHandler for SimpleSynchronousModel<'a, T>
 where
-    T: UserRequestIterator + Clone + PartialOrd + Ord + PartialEq + Eq
+    T: UserRequestIterator + Clone + PartialOrd + Ord + PartialEq + Eq,
 {
     type Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
@@ -117,4 +118,3 @@ where
         }
     }
 }
-

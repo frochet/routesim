@@ -4,7 +4,6 @@
 //! E.g., sending email-like data within a mixnet; or chat messages
 
 use crate::config::PAYLOAD_SIZE;
-use std::ops::{Deref, DerefMut};
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
@@ -15,6 +14,7 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use siphasher::sip128::{Hasher128, SipHasher};
 use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
 
 pub struct SimpleEmailModel<'a, T> {
     _tot_users: u32,
@@ -46,7 +46,6 @@ impl<'a, T> UserModel<'a> for SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
-
     type URequest = T;
 
     fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
@@ -127,8 +126,7 @@ where
             if peer != self.get_userid() && !self.uinfo.contacts_list.contains(&peer) {
                 self.uinfo.contacts_list.push(peer);
                 count -= 1;
-            }
-            else {
+            } else {
                 attempt += 1;
                 if attempt == max_attemps {
                     panic!("Something's wrong: We cannot successfully find enough contacts");
@@ -165,7 +163,7 @@ where
     fn update(&mut self, message_timing: u64) {
         self.uinfo.update(message_timing, &mut self.rng);
     }
-    
+
     fn build_req(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
@@ -258,7 +256,8 @@ impl<T> DerefMut for UserModelIterator<T> {
 }
 impl<'a, T, U> Iterator for UserModelIterator<T>
 where
-    T: UserModel<'a, URequest=U> + RequestHandler<Out=(u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
+    T: UserModel<'a, URequest = U>
+        + RequestHandler<Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
 {
     type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 

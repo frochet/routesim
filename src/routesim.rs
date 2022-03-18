@@ -3,8 +3,8 @@ use crate::config::PATH_LENGTH;
 use crate::histogram::Histogram;
 use crate::mailbox::MailBox;
 use crate::mixnodes::mixnode::Mixnode;
-use crate::usermodel::*;
 use crate::userasyncmodel::UserModelIterator;
+use crate::usermodel::*;
 use chrono::NaiveDateTime;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender;
@@ -179,7 +179,7 @@ impl Runable {
                     model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                     model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
                 }
-                UserModelIterator{ 0:model }
+                UserModelIterator { 0: model }
             })
             .collect();
         usermodels
@@ -203,7 +203,7 @@ impl Runable {
                 model.set_contacts(self.contacts, &die);
                 model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
                 model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
-                UserModelIterator { 0:model }
+                UserModelIterator { 0: model }
             })
             .collect();
         let mut senders: Vec<Sender<T::URequest>> = Vec::with_capacity(self.users as usize);
@@ -235,7 +235,7 @@ impl Runable {
     pub fn run<'a, T>(&'a self, mut usermodels: Vec<UserModelIterator<T>>)
     where
         T: UserModel<'a> + Send,
-        T: RequestHandler<Out=(u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
+        T: RequestHandler<Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
     {
         // for_each should block until they all completed
         (0..self.users)

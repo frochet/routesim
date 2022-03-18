@@ -21,13 +21,12 @@ pub enum AnonModelKind {
 
 pub trait RequestHandler {
     type Out;
-    
+
     fn init_list(&mut self) {}
     fn fetch_next(&mut self) -> Option<Self::Out>;
 }
 
-pub trait UserModel<'a>
-{
+pub trait UserModel<'a> {
     type URequest: UserRequestIterator + Clone + Eq + Ord + PartialEq + PartialOrd;
 
     fn new(tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, Self::URequest>) -> Self;
