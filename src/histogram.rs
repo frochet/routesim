@@ -29,11 +29,11 @@ impl Histogram {
     /// data should be a list of timestamps.
     pub fn from_json(json_data: &str, bin_size: usize) -> Result<Histogram> {
         let mut jdata: HistData = serde_json::from_str(json_data)?;
-        jdata.data.sort();
-        let period = jdata.data.last().unwrap_or(&(60 * 60 * 24 * 7 as usize))
+        jdata.data.sort_unstable();
+        let period = jdata.data.last().unwrap_or(&(60 * 60 * 24 * 7_usize))
             - jdata.data.first().unwrap_or(&(0 as usize));
-        let first = jdata.data.first().unwrap_or(&(0 as usize));
-        let last = jdata.data.last().unwrap_or(&(60 * 60 * 24 * 7 as usize));
+        let first = jdata.data.first().unwrap_or(&(0_usize));
+        let last = jdata.data.last().unwrap_or(&(60 * 60 * 24 * 7_usize));
         let mut bin: i64 = 0;
         let mut count: i64 = 0;
         let (timestamps, weights): (Vec<usize>, Vec<usize>) = jdata
@@ -70,7 +70,7 @@ impl Histogram {
                     (this_bin as usize, this_count as usize)
                 }
             })
-            .filter(|x| if let (0, 0) = x { false } else { true })
+            .filter(|x| !matches!(x, (0, 0)))
             .unzip();
 
         let wi = Box::new(WeightedAliasIndex::new(weights).unwrap());

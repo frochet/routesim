@@ -11,6 +11,7 @@ use rand::distributions::{Distribution, Uniform};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use siphasher::sip128::SipHasher;
+use std::cmp::Reverse;
 
 pub struct LoopixEmailModel<'a, T> {
     current_time: u64,
@@ -160,9 +161,8 @@ where
 
     #[inline]
     fn fetch_next(&mut self) -> Option<Self::Out> {
-        if self.current_req.is_none() {
-            return None;
-        }
+        // return None if there isnt a current_req
+        self.current_req.as_ref()?;
         let req = self.current_req.as_mut().unwrap();
         let reqid = req.get_requestid();
         match req.next() {
@@ -189,8 +189,7 @@ where
             }
         }
         // should sort with the biggest request_time first.
-        self.req_list
-            .sort_by(|r1, r2| r2.get_request_time().cmp(&r1.get_request_time()));
+        self.req_list.sort_by_key(|r2| Reverse(r2.get_request_time()));
         // pop the last element (i.e, the smallest request_time)
         self.current_req = self.req_list.pop();
         self.current_time += t_sampler.period + 1;

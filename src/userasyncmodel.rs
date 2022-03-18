@@ -15,6 +15,7 @@ use rand::SeedableRng;
 use siphasher::sip128::{Hasher128, SipHasher};
 use std::hash::{Hash, Hasher};
 use std::ops::{Deref, DerefMut};
+use std::cmp::Reverse;
 
 pub struct SimpleEmailModel<'a, T> {
     _tot_users: u32,
@@ -201,9 +202,7 @@ where
     fn fetch_next(&mut self) -> Option<Self::Out> {
         // that may happen if we build an empty list of requests because we're over the limit
         // already
-        if self.current_req.is_none() {
-            return None;
-        }
+        self.current_req.as_ref()?;
         let mailbox = self.uinfo.topos[self.current_req.as_ref().unwrap().get_topos_idx() as usize]
             .get_mailbox(self.current_req.as_ref().unwrap().get_peers().1);
         //let mailbox = self.get_mailbox(self.current_req.as_ref().unwrap().get_topos_idx() as usize);
@@ -234,8 +233,7 @@ where
             }
         }
         // should sort with the biggest request_time first.
-        self.req_list
-            .sort_by(|r1, r2| r2.get_request_time().cmp(&r1.get_request_time()));
+        self.req_list.sort_by_key(|r2| Reverse(r2.get_request_time()));
         // pop the last element (i.e, the smallest request_time)
         self.current_req = self.req_list.pop();
         self.current_time += t_sampler.period + 1;

@@ -98,10 +98,9 @@ impl TopologyConfig {
         // returns an owned iterator
         for i in 0..PATH_LENGTH {
             if let Some(wc) = &*self.wc_layers[i as usize] {
-                if i as usize == GUARDS_LAYER && guard.is_some() {
-                    path.push(guard.unwrap());
-                } else {
-                    path.push(&self.layers[i as usize][wc.sample(rng)]);
+                match guard {
+                    Some(g) if i as usize == GUARDS_LAYER => path.push(g),
+                    _ =>  path.push(&self.layers[i as usize][wc.sample(rng)]),
                 }
             }
         }
@@ -122,12 +121,11 @@ where
     let mut line_reader = BufReader::new(file).lines();
     let mut epoch: u32 = 0;
     if let Some(header) = line_reader.next() {
-        let header_val = header.unwrap_or("mixid, bandwidth, malicious, epoch_0".to_string());
+        let header_val = header.unwrap_or_else(|_| "mixid, bandwidth, malicious, epoch_0".to_string());
         let epoch_val = header_val.split(',').nth(3).unwrap_or("epoch_0");
         let epoch_val = epoch_val.split('_').nth(1);
-        match epoch_val {
-            Some(some_integer) => epoch = some_integer.parse::<u32>().unwrap(),
-            None => (),
+        if let Some(some_integer) = epoch_val {
+            epoch = some_integer.parse::<u32>().unwrap()
         }
     }
     let mut config: TopologyConfig = TopologyConfig::new(filename_string, epoch);

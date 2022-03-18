@@ -209,7 +209,7 @@ impl<'a, T> UserModelInfo<'a, T> {
     }
 
     pub fn drop_senders(&mut self) {
-        drop(&self.senders)
+        drop(self.senders.to_owned())
     }
 
     pub fn send_request(&self, req: T) -> Result<(), crossbeam_channel::SendError<T>>

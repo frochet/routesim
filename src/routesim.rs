@@ -176,8 +176,8 @@ impl Runable {
                 );
                 if self.timestamps_h.is_some() {
                     model.set_contacts(self.contacts, &die);
-                    model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
-                    model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
+                    model.with_size_sampler(self.sizes_h.as_ref().unwrap());
+                    model.with_timestamp_sampler(self.timestamps_h.as_ref().unwrap());
                 }
                 UserModelIterator { 0: model }
             })
@@ -201,8 +201,8 @@ impl Runable {
                 );
                 // add a reference to the histogram for sampling
                 model.set_contacts(self.contacts, &die);
-                model.with_size_sampler(&self.sizes_h.as_ref().unwrap());
-                model.with_timestamp_sampler(&self.timestamps_h.as_ref().unwrap());
+                model.with_size_sampler(self.sizes_h.as_ref().unwrap());
+                model.with_timestamp_sampler(self.timestamps_h.as_ref().unwrap());
                 UserModelIterator { 0: model }
             })
             .collect();
@@ -219,7 +219,7 @@ impl Runable {
                 .get_contacts()
                 .unwrap()
                 .iter()
-                .map(|c| *c)
+                .copied()
                 .collect();
             contacts.iter().for_each(|j| {
                 usermodels[i as usize].add_sender(*j, senders[*j as usize].clone());
