@@ -145,7 +145,7 @@ fn main() {
     match &opts.usermod[..] {
         "simple" => {
             // XXX todo! makes sync models accept histograms
-            let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>, UserRequest>();
+            let usermodels = runner.init_sync::<SimpleSynchronousModel<UserRequest>>();
             runner.run(usermodels);
         }
         "email" | "loopixemail" => {
@@ -161,10 +161,10 @@ fn main() {
                 .with_timestamps_hist(timestamps_h)
                 .with_sizes_hist(sizes_h);
             if &opts.usermod[..] == "email" {
-                let usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+                let usermodels = runner.init::<SimpleEmailModel<UserRequest>>();
                 runner.run(usermodels);
             } else {
-                let usermodels = runner.init_sync::<LoopixEmailModel<UserRequest>, UserRequest>();
+                let usermodels = runner.init_sync::<LoopixEmailModel<UserRequest>>();
                 runner.run(usermodels);
             }
         }

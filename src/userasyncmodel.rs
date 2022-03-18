@@ -14,6 +14,7 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use siphasher::sip128::{Hasher128, SipHasher};
 use std::hash::{Hash, Hasher};
+use std::ops::{Deref, DerefMut};
 
 pub struct SimpleEmailModel<'a, T> {
     _tot_users: u32,
@@ -41,10 +42,12 @@ pub struct SimpleEmailModel<'a, T> {
     hasher: SipHasher,
 }
 
-impl<'a, T> UserModel<'a, T> for SimpleEmailModel<'a, T>
+impl<'a, T> UserModel<'a> for SimpleEmailModel<'a, T>
 where
     T: UserRequestIterator + Clone + Ord + PartialOrd + Eq + PartialEq,
 {
+    type URequest = T;
+
     fn new(_tot_users: u32, epoch: u32, uinfo: UserModelInfo<'a, T>) -> Self {
         let rng = SmallRng::from_entropy();
         let hasher = SipHasher::new();
@@ -62,6 +65,14 @@ where
             rng,
             hasher,
         }
+    }
+
+    fn get_reqlist(&self) -> &Vec<Self::URequest> {
+        &self.req_list
+    }
+
+    fn get_reqlist_mut(&mut self) -> &mut Vec<Self::URequest> {
+        &mut self.req_list
     }
 
     fn with_timestamp_sampler(&mut self, timestamp_sampler: &'a Histogram) -> &mut Self {
@@ -88,8 +99,12 @@ where
     }
 
     #[inline]
-    fn get_request(&self) -> Option<T> {
+    fn get_request(&self) -> Option<Self::URequest> {
         self.uinfo.get_request()
+    }
+    #[inline]
+    fn set_current_request(&mut self, req: Option<Self::URequest>) {
+        self.current_req = req;
     }
 
     #[inline]
@@ -111,8 +126,7 @@ where
             if peer != self.get_userid() && !self.uinfo.contacts_list.contains(&peer) {
                 self.uinfo.contacts_list.push(peer);
                 count -= 1;
-            }
-            else {
+            } else {
                 attempt += 1;
                 if attempt == max_attemps {
                     panic!("Something's wrong: We cannot successfully find enough contacts");
@@ -149,12 +163,7 @@ where
     fn update(&mut self, message_timing: u64) {
         self.uinfo.update(message_timing, &mut self.rng);
     }
-}
 
-impl<'a, T> SimpleEmailModel<'a, T>
-where
-    T: UserRequestIterator + Clone + PartialOrd + Ord + Eq + PartialEq,
-{
     fn build_req(&mut self) -> Option<T> {
         let contact: u32 =
             self.uinfo.contacts_list[self.contact_sampler.unwrap().sample(&mut self.rng) as usize];
@@ -180,9 +189,16 @@ where
 
         Some(req)
     }
+}
+
+impl<'a, T> RequestHandler for SimpleEmailModel<'a, T>
+where
+    T: UserRequestIterator + Clone + PartialOrd + Ord + Eq + PartialEq,
+{
+    type Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
     #[inline]
-    fn fetch_next(&mut self) -> Option<<SimpleEmailModel<'a, T> as Iterator>::Item> {
+    fn fetch_next(&mut self) -> Option<Self::Out> {
         // that may happen if we build an empty list of requests because we're over the limit
         // already
         if self.current_req.is_none() {
@@ -225,15 +241,28 @@ where
         self.current_time += t_sampler.period + 1;
     }
 }
+pub struct UserModelIterator<T>(pub T);
+impl<T> Deref for UserModelIterator<T> {
+    type Target = T;
 
-impl<'a, T> Iterator for SimpleEmailModel<'a, T>
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<T> DerefMut for UserModelIterator<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl<'a, T, U> Iterator for UserModelIterator<T>
 where
-    T: UserRequestIterator + Clone + Eq + Ord + PartialEq + PartialOrd,
+    T: UserModel<'a, URequest = U>
+        + RequestHandler<Out = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>)>,
 {
     type Item = (u64, Option<&'a Mixnode>, Option<&'a MailBox>, Option<u128>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.req_list.is_empty() {
+        if self.get_reqlist().is_empty() {
             self.init_list();
         }
         let next = self.fetch_next();
@@ -248,11 +277,12 @@ where
             //    expected to return None
             // So eventually we can handle the three cases with a if {} else {}
             None => {
-                if self.req_list.is_empty() && self.current_time < self.limit {
+                if self.get_reqlist().is_empty() && self.get_current_time() < self.get_limit() {
                     self.init_list();
                     self.fetch_next()
                 } else {
-                    self.current_req = self.req_list.pop();
+                    let req = self.get_reqlist_mut().pop();
+                    self.set_current_request(req);
                     self.fetch_next()
                 }
             }
@@ -420,7 +450,7 @@ mod tests {
         runner
             .with_timestamps_hist(t_sampler)
             .with_sizes_hist(s_sampler);
-        let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>, UserRequest>();
+        let mut usermodels = runner.init::<SimpleEmailModel<UserRequest>>();
 
         for usermodel in &usermodels {
             let contacts: Vec<u32> = usermodel
