@@ -1,3 +1,4 @@
+# About
 
 This is a behavioural simulator for user activity in a Mixnet. The objective of
 this tool is to evaluate the probability of a deanonymization through time,
@@ -34,4 +35,41 @@ a Web Server). And asynchronous ones that mainly capture potential interaction
 between anonymous users (e.g., some user send a message to someone's else
 mailbox; and the peer can then anonymously fetch the message asynchronously).
 
+# Installing Rust
 
+```bash
+curl --proto '=https' --tlsv1.3 -sSf https://sh.rustup.rs | sh
+```
+See [Other Installation
+Methods](https://forge.rust-lang.org/infra/other-installation-methods.html) if
+you're on Windows.
+
+Add Cargo to your PATH.
+
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+# Compiling and installing routesim
+
+Clone the repository.
+
+```bash
+  git clone https://github.com/frochet/routesim.git
+```
+
+Compile && install.
+
+```bash
+cd routesim
+cargo install --path .
+```
+
+You should now have routesim installed in ~/.cargo/bin and access to its
+interface:
+
+```bash
+routesim -h
+```
+# Examples
+
+todo

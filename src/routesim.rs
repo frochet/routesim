@@ -161,7 +161,7 @@ impl Runable {
             print!("{log}");
         }
     }
-
+    /// Initialize synchronous-type user models
     pub fn init_sync<'a, T>(&'a self) -> Vec<UserModelIterator<T>>
     where
         T: UserModel<'a>,
@@ -179,12 +179,13 @@ impl Runable {
                     model.with_size_sampler(self.sizes_h.as_ref().unwrap());
                     model.with_timestamp_sampler(self.timestamps_h.as_ref().unwrap());
                 }
-                UserModelIterator { 0: model }
+                UserModelIterator(model)
             })
             .collect();
         usermodels
     }
 
+    /// Initialize asynchronous-type user models
     pub fn init<'a, T>(&'a self) -> Vec<UserModelIterator<T>>
     where
         T: UserModel<'a>,
@@ -203,7 +204,7 @@ impl Runable {
                 model.set_contacts(self.contacts, &die);
                 model.with_size_sampler(self.sizes_h.as_ref().unwrap());
                 model.with_timestamp_sampler(self.timestamps_h.as_ref().unwrap());
-                UserModelIterator { 0: model }
+                UserModelIterator(model)
             })
             .collect();
         let mut senders: Vec<Sender<T::URequest>> = Vec::with_capacity(self.users as usize);

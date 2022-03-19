@@ -1,11 +1,9 @@
-use crate::mailbox::MailBox;
+//! A simple user model -- It samples messages within a [5, 15min] interval
+//!
+//! Currently does not send the message to any simulated user in particular, and it is one message
+//! at a time.
 use crate::mixnodes::mixnode::Mixnode;
-/**
- * A simple user model -- It samples messages within a [5, 15min] interval
- *
- * Currently does not send the message to any simulated user in particular, and it is one message
- * at a time.
- */
+use crate::mailbox::MailBox;
 use crate::usermodel::{
     AnonModelKind, RequestHandler, UserModel, UserModelInfo, UserRequestIterator,
 };

@@ -85,10 +85,6 @@ impl Histogram {
     pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
         let idx = self.wi.sample(rng);
         unsafe { *self.timestamps.get_unchecked(idx) }
-        //match self.timestamps.get(idx) {
-        //Some(elem) => *elem,
-        //None=> panic!("Wrong idx: {}", idx),
-        //}
     }
 }
 

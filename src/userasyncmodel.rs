@@ -239,6 +239,11 @@ where
         self.current_time += t_sampler.period + 1;
     }
 }
+
+// So, apparently Rust does not let me do a generic implementation of Iterator for T where T:
+// X:Iterator. One solution to this is to wrap T in another Type and implement
+// Iterator/Deref/DerefMut for this type; now I have a custom next() for all type implementing
+// UserModels<'a>
 pub struct UserModelIterator<T>(pub T);
 impl<T> Deref for UserModelIterator<T> {
     type Target = T;
@@ -309,6 +314,9 @@ pub struct UserRequest {
     pub topos_idx: u16,
 }
 
+// k1 == k2 should imply  hash(k1) == hash(k2); but we don't need that property
+// here.
+#[allow(clippy::derive_hash_xor_eq)]
 impl std::hash::Hash for UserRequest {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.request_time.hash(state);

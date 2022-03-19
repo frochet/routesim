@@ -1,13 +1,11 @@
+//! We assume a mixnet protocol in which each user can populate
+//! a mailbox information to be asynchronously reachable
+//!
+//! In this simple implementation, the mailbox would a node from one of the first or second layer
+//!
+//! As soon as we have a real and sound mixnet deployment, mailbox information should
+//! be provided according to the external channel choice made.
 use crate::mixnodes::mixnode::Mixnode;
-/**
- * We assume a mixnet protocol in which each user can populate
- * a mailbox information to be asynchronously reachable
- *
- * In this simple implementation, the mailbox would a node from one of the first or second layer
- *
- * As soon as we have a real and sound mixnet deployment, mailbox information should
- * be provided according to the choices they make.
- */
 use rand::seq::SliceRandom;
 use rand::Rng;
 

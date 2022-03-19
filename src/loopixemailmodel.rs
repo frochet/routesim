@@ -115,11 +115,18 @@ where
     fn set_contacts(&mut self, contacts: u32, die: &Uniform<u32>) {
         self.contact_sampler = Some(Uniform::from(0..contacts));
         let mut count = contacts;
+        let max_attemps = 100;
+        let mut attempt = 0;
         while count != 0 {
             let peer = die.sample(&mut self.rng);
             if peer != self.get_userid() && !self.uinfo.contacts_list.contains(&peer) {
                 self.uinfo.contacts_list.push(peer);
                 count -= 1;
+            } else {
+                attempt += 1;
+                if attempt == max_attemps {
+                    panic!("Something's wrong: We cannot successfully find enough contacts");
+                }
             }
         }
     }
