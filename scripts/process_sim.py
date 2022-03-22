@@ -98,7 +98,7 @@ def parse_log_routesim_sync(filename):
         for line in logfile:
             tab = line.split()
             sample_id = int(tab[2])
-            is_compromised = strtobool(tab[4])
+            is_compromised = strtobool(tab[-1])
             # avoid considering a "if" branch when the key exist.
             try:
                 if sample_id not in res['time_to_first_compromise']:
