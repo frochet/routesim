@@ -93,6 +93,11 @@ time_data.json and size_data.json.
 
 ## Preparing Bow-Tie topologies
 
+```bash
+mkdir -p topologies/bow-tie
+cd topologies/bow-tie
+../../scripts/split_csv_file.sh ../../testfiles/layout_data/bow_tie/dynamic_hybrid_steady_0.03_layout.csv
+```
 ## Running a Simulation
  
 ```bash
