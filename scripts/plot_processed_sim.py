@@ -72,12 +72,12 @@ def plot_cdf(lines, line_labels, xlabel, title, location, out_pathname,
     matplotlib.pyplot.ylabel('Cumulative probability', fontsize=fontsize)
     matplotlib.pyplot.grid()
     matplotlib.pyplot.tight_layout()
-    
+
     #matplotlib.pyplot.show()
     matplotlib.pyplot.savefig(out_pathname)
 
 if __name__ == "__main__":
-    
+
     args = parser.parse_args()
     if not args.time and not args.count:
         print("--count or --time is missing")
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     else:
         divider = 30*24*60*60
         unit = "[months]"
-            
+
     for datapath in args.data:
         with open(datapath, "rb") as file:
             simresults = pickle.load(file)

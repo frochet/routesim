@@ -17,9 +17,9 @@ same). The simulator then output path information for each message sent by each
 sampled user (i.e., we apply a Monte Carlo method). As a matter of example, the
 "simple" model outputs the following kind of line:
 
-...  
-1970-01-01 00:44:31 2538 570,260,1007, false
-...  
+```bash  
+1970-01-01 00:44:31 2538 570,260,1007, false  
+```   
 
 containing the date, the sample id, the path (mix ids) and whether the route is
 fully compromised or not (i.e., whether the user selected PATH_LENGTH malicious mixes).
@@ -72,4 +72,29 @@ routesim -h
 ```
 # Examples
 
-todo
+If you wish to simulate your email-pattern behavior over the Mixnet,
+there are a few steps ahead of the simulation itself. Your first need to
+extract your data, and post-process them using the available script
+located at scripts/process-mailbox.py.
+
+## Extracting Emails
+
+Assuming you have a thunderbird client, install the addon
+ImportExportTools NG, and then export your send folder as a .mbox file.
+Then, use the script to produce two files containing some processed
+information:
+
+```bash
+python3 scripts/process-mailbox.py path/to/mbox/file
+```
+
+You should then have two .json file in your current directory, named
+time_data.json and size_data.json.
+
+## Preparing Bow-Tie topologies
+
+## Running a Simulation
+ 
+```bash
+routesim --timestamps-h time_data.json --sizes-h size_data.json --in-dir topologies/bow-tie --epoch 3600 -u email --days 30 | sed 's/;/\n/g' > output_routesim_data
+```
