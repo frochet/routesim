@@ -1,4 +1,22 @@
-# About
+# Context
+
+Anonymous communication network designs exist in different flavors to defend
+different threat models with various adversarial strengths. Tor is an example of
+extremely *performant* design that resists local adversaries to some extend, and
+does not offer any guarantee against a global passive adversary (GPA). At the
+other end of this spectrum, academic proposals such as Atom or XRD offer a
+provably secure solution against both a GPA and local attackers, such as
+insiders (i.e., a fraction of the network controlled by the adversary).
+However, those designs pay a serious performance penalty, limiting their
+appeal. In the middle of this situation, we also find designs such as Loopix or
+Nym, which are _not_ provably secure against a GPA but *should* be stronger
+than Tor. Yet like Tor, they also resist local adversaries to some extend.
+
+This tool focuses on systems such Loopix or Nym and measures their ability to
+resist against the insider threat: an adversary running nodes in the network
+and actively trying to deanonymize their users.
+
+# Routesim -- Technical goal
 
 This is a behavioural simulator for user activity in a Mixnet. The objective of
 this tool is to evaluate the probability of a deanonymization through time,
@@ -77,7 +95,9 @@ there are a few steps ahead of the simulation itself. Your first need to
 extract your data, and post-process them using the available script
 located at scripts/process-mailbox.py.
 
-## Extracting Emails
+## A dummy example
+
+## A complex usage case: evaluating the impact of your email sending pattern
 
 Assuming you have a thunderbird client, install the addon
 ImportExportTools NG, and then export your send folder as a .mbox file.
