@@ -149,7 +149,7 @@ the directory scripts/. `process_sim.py` process the output of the
 routesim command and store relevant summaries serialized in a pickle
 file.
 
-```bash
+```
 $ python3 scripts/process_sim.py -h
 usage: process_sim.py [-h] --in_file IN_FILE [--outname OUTNAME] [--format FORMAT] [--nbr_messages_until_compromise] --samples SAMPLES
 
@@ -173,7 +173,7 @@ python3 scripts/process_sim.py --in_file output_routesim_data --outname data_to_
 Now you should have a file named data_to_plot.pickle in your active
 directory. You can use `plot_processed_sim.py` to get a visual.
 
-```bash
+```
 $ python3 scripts/plot_processed_sim.py -h
 usage: plot_processed_sim.py [-h] [--time] [--count] [--data DATA [DATA ...]] [--label LABEL [LABEL ...]]
 
