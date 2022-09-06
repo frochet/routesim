@@ -139,7 +139,62 @@ cd topologies/bow-tie
 ## Running a Simulation
  
 ```bash
-routesim --timestamps-h time_data.json --sizes-h size_data.json --in-dir topologies/bow-tie --epoch 3600 -u email --days 30 | sed 's/;/\n/g' > output_routesim_data
+routesim --timestamps-h time_data.json --sizes-h size_data.json --in-dir topologies/bow-tie --epoch 3600 -u email --users 5000 --days 30 | sed 's/;/\n/g' > output_routesim_data
 ```
 
 ## Parsing & Plotting Results
+
+You'll find scripts to process and plots the simulation results in
+the directory scripts/. `process_sim.py` process the output of the
+routesim command and store relevant summaries serialized in a pickle
+file.
+
+```bash
+$ python3 scripts/process_sim.py -h
+usage: process_sim.py [-h] --in_file IN_FILE [--outname OUTNAME] [--format FORMAT] [--nbr_messages_until_compromise] --samples SAMPLES
+
+Process results from routesim.py. Output serialized objects for plotting script, and output the answer to 'How many messages clients send before getting deanonymed, on average'
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --in_file IN_FILE     The output file produced by routesim.py
+  --outname OUTNAME     filename for the pickle storage
+  --format FORMAT       tell the parser the expected format
+  --nbr_messages_until_compromise
+                        Display the number of messages until compromise, on average
+  --samples SAMPLES     Number of samples in file used in the simulation (--users in routesim)
+
+```
+
+```bash
+python3 scripts/process_sim.py --in_file output_routesim_data --outname data_to_plot --format async --samples 5000
+```
+
+Now you should have a file named data_to_plot.pickle in your active
+directory. You can use `plot_processed_sim.py` to get a visual.
+
+```bash
+$ python3 scripts/plot_processed_sim.py -h
+usage: plot_processed_sim.py [-h] [--time] [--count] [--data DATA [DATA ...]] [--label LABEL [LABEL ...]]
+
+Plot Time-to-first route compromised cdf of the routesim results
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --time
+  --count
+  --data DATA [DATA ...]
+                        datapath to the pickle file
+  --label LABEL [LABEL ...]
+                        Line label in the same order than the data
+```
+
+You can give the script multiple --data and --label for all your
+simulations. They will be plotted on the same figure. 
+
+```bash
+python3 scripts/plot_processed_sim.py --time --data data_to_plot.json.pickle --label simulation_example
+```
+
+In this case, only one line is expected.
+
