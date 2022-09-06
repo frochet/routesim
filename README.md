@@ -2,19 +2,27 @@
 
 Anonymous communication network designs exist in different flavors to defend
 different threat models with various adversarial strengths. Tor is an example of
-extremely *performant* design that resists local adversaries to some extend, and
-does not offer any guarantee against a global passive adversary (GPA). At the
-other end of this spectrum, academic proposals such as Atom or XRD offer a
-provably secure solution against both a GPA and local attackers, such as
-insiders (i.e., a fraction of the network controlled by the adversary).
-However, those designs pay a serious performance penalty, limiting their
-appeal. In the middle of this situation, we also find designs such as Loopix or
-Nym, which are _not_ provably secure against a GPA but *should* be stronger
-than Tor. Yet like Tor, they also resist local adversaries to some extend.
+extremely *performant* design that *probabilistically* resists local
+adversaries to some extend, but does not offer any guarantee against a global
+passive adversary (GPA). At the other end of this spectrum, academic proposals
+such as Atom or XRD offer a provably secure solution against both a GPA and
+local attackers, such as insiders (i.e., a fraction of the network controlled
+by the adversary).  However, those designs pay a serious performance penalty,
+limiting their appeal. In the middle of this situation, we also find designs
+such as Loopix or Nym, which are _not_ provably secure against a GPA but
+*should* be stronger than Tor. Yet like Tor, they also *probabilistically*
+resist local adversaries only to some extend, i.e., the probability to get
+compromised is actually far from negligible.
 
 This tool focuses on systems such Loopix or Nym and measures their ability to
 resist against the insider threat: an adversary running nodes in the network
-and actively trying to deanonymize their users.
+and actively trying to deanonymize their users. Eventually, it is possible to
+use this tool to test subtle design decisions and have a precise understanding
+of how they impact users' anonymity. As a user of a given anonymity network, it
+is also possible to use this tool to simulate our own behavior and evaluate its
+impact. This could be useful, for example, for a whistleblower to verify and
+adapt their behavior to minimize chances to get deanonymized while
+communicating critical information.
 
 # Routesim -- Technical goal
 
@@ -90,14 +98,24 @@ routesim -h
 ```
 # Examples
 
+## A dummy example
+
+In your terminal, run the following:
+
+```bash
+routesim --in-dir testfiles/single_layout --epoch 86401 -u simple --users 2 --days 1 -c 1 -t
+```
+
+This instructs routesim to simulate two users during 1 day with the "simple"
+user model, and outputs to stdout the route taken during the virtual day.
+
+
+## A complex usage case: evaluating the impact of your email sending pattern
+
 If you wish to simulate your email-pattern behavior over the Mixnet,
 there are a few steps ahead of the simulation itself. Your first need to
 extract your data, and post-process them using the available script
 located at scripts/process-mailbox.py.
-
-## A dummy example
-
-## A complex usage case: evaluating the impact of your email sending pattern
 
 Assuming you have a thunderbird client, install the addon
 ImportExportTools NG, and then export your send folder as a .mbox file.
@@ -123,3 +141,5 @@ cd topologies/bow-tie
 ```bash
 routesim --timestamps-h time_data.json --sizes-h size_data.json --in-dir topologies/bow-tie --epoch 3600 -u email --days 30 | sed 's/;/\n/g' > output_routesim_data
 ```
+
+## Parsing & Plotting Results
