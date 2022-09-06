@@ -145,8 +145,8 @@ routesim --timestamps-h time_data.json --sizes-h size_data.json --in-dir topolog
 ## Parsing & Plotting Results
 
 You'll find scripts to process and plots the simulation results in
-the directory scripts/. `process_sim.py` process the output of the
-routesim command and store relevant summaries serialized in a pickle
+the directory scripts/. `process_sim.py` processes the output of the
+routesim command and stores relevant summaries serialized in a pickle
 file.
 
 ```
@@ -190,7 +190,7 @@ optional arguments:
 ```
 
 You can give the script multiple --data and --label for all your
-simulations. They will be plotted on the same figure. 
+simulations. They will be plotted on the same figure.
 
 ```bash
 python3 scripts/plot_processed_sim.py --time --data data_to_plot.json.pickle --label simulation_example
