@@ -3,34 +3,33 @@
 Anonymous communication network designs exist in different flavors to defend
 different threat models with various adversarial strengths. Tor is an example of
 extremely *performant* design that *probabilistically* resists local
-adversaries to some extend, but does not offer any guarantee against a global
+adversaries to some extent, but does not offer a security guarantee against a global
 passive adversary (GPA). At the other end of this spectrum, academic proposals
-such as Atom or XRD offer a provably secure solution against both a GPA and
+such as Atom or XRD offer provable security against both a GPA and
 local attackers, such as insiders (i.e., a fraction of the network controlled
-by the adversary).  However, those designs pay a serious performance penalty,
-limiting their appeal. In the middle of this situation, we also find designs
-such as Loopix or Nym, which are _not_ provably secure against a GPA but
-*should* be stronger than Tor. Yet like Tor, they also *probabilistically*
-resist local adversaries only to some extend, i.e., the probability to get
-compromised is actually far from negligible.
+by the adversary).  However, those designs pay a significant performance penalty,
+limiting their appeal. In between these two types of systems, we also find designs
+based on continuous-time mixing, such as Loopix or Nym, which are _not_ provably secure against a GPA but
+*may* be stronger than Tor. Yet like Tor, they also *probabilistically*
+resist local adversaries only to some extent, i.e., the probability to get
+compromised in reality is not negligible.
 
-This tool focuses on systems such Loopix or Nym and measures their ability to
-resist against the insider threat: an adversary running nodes in the network
-and actively trying to deanonymize their users. Eventually, it is possible to
-use this tool to test subtle design decisions and have a precise understanding
+routesim is a tool to analyze and evaluate continuous-time mixing designs (such as Loopix/Nym) and measures their ability to
+resist the insider threat, i.e. an adversary running nodes in the network
+and actively trying to deanonymize their users. With routesim, it is possible to test subtle design decisions and have a precise understanding
 of how they impact users' anonymity. As a user of a given anonymity network, it
-is also possible to use this tool to simulate our own behavior and evaluate its
+is also possible to use routesim to simulate their own behavior and evaluate its
 impact. This could be useful, for example, for a whistleblower to verify and
 adapt their behavior to minimize chances to get deanonymized while
 communicating critical information.
 
 # Routesim -- Technical goal
 
-This is a behavioural simulator for user activity in a Mixnet. The objective of
+This is a behavioural simulator for user activity in a continuous-time Mixnet. The objective of
 this tool is to evaluate the probability of a deanonymization through time,
 assuming some level of adversarial activity among the mixes. This probability
 of deanonymization is determined by the user behaviour (i.e., how many messages
-the user sends, and what sending distribution through time).
+the user sends, and their sending volume distribution through time).
 
 This program can take in input behavioural patterns; i.e., a probabilistic
 model of the user activity through a period. The simulator can then play this
